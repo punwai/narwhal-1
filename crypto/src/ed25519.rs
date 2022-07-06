@@ -3,7 +3,9 @@
 use base64ct::{Base64, Encoding};
 use serde::{de, Deserialize, Serialize};
 use signature::{Signature, Signer, Verifier};
-use std::fmt::{self, Display};
+use std::{fmt::{self, Display}};
+use std::str::FromStr;
+use anyhow::Error;
 
 use crate::traits::{
     Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes, VerifyingKey,
@@ -196,6 +198,19 @@ impl KeyPair for Ed25519KeyPair {
             name: Ed25519PublicKey(kp.public),
             secret: Ed25519PrivateKey(kp.secret),
         }
+    }
+}
+
+impl FromStr for Ed25519KeyPair {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let value = Base64::decode_vec(s).map_err(|e| anyhow::anyhow!("{}", e.to_string()))?;
+        let kp = ed25519_dalek::Keypair::from_bytes(&value).map_err(|e| anyhow::anyhow!("{}", e.to_string()))?;
+        Ok(Ed25519KeyPair{
+            name: Ed25519PublicKey(kp.public),
+            secret: Ed25519PrivateKey(kp.secret)
+        })
     }
 }
 
