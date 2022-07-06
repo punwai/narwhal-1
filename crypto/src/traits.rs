@@ -130,6 +130,6 @@ pub trait KeyPair {
     type PubKey: VerifyingKey<PrivKey = Self::PrivKey>;
     type PrivKey: SigningKey<PubKey = Self::PubKey>;
     fn public(&'_ self) -> &'_ Self::PubKey;
-    fn private(self) -> Self::PrivKey;
+    fn private(&'_ self) -> &'_ Self::PrivKey;
     fn generate<R: CryptoRng + RngCore>(rng: &mut R) -> Self;
 }

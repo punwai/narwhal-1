@@ -338,8 +338,8 @@ impl KeyPair for BLS12381KeyPair {
         &self.name
     }
 
-    fn private(self) -> Self::PrivKey {
-        self.secret
+    fn private(&'_ self) -> &'_ Self::PrivKey {
+        &self.secret
     }
 
     fn generate<R: rand::CryptoRng + rand::RngCore>(rng: &mut R) -> Self {
