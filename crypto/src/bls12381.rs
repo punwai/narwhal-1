@@ -504,15 +504,15 @@ impl AggregateAuthenticator for BLS12381AggregateSignature {
     }
 
     fn batch_verify(
-        signatures: &[&Self],
-        pks: &[&[&<Self::Sig as Authenticator>::PubKey]],
-        message: &[&[u8]],
+        signatures: Vec<&Self>,
+        pks: Vec<Vec<&Self::PubKey>>,
+        messages: Vec<&[u8]>
     ) -> Result<(), signature::Error> {
         for i in 0..signatures.len() {
             let sig = signatures[i].sig;
             let result = sig.ok_or(signature::Error::new())?.fast_aggregate_verify(
                 true,
-                message[i],
+                messages[i],
                 DST,
                 &pks[i].iter().map(|x| &x.pubkey).collect::<Vec<_>>()[..],
             );
