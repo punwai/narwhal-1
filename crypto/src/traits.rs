@@ -122,6 +122,7 @@ pub trait Authenticator:
 {
     type PubKey: VerifyingKey<Sig = Self>;
     type PrivKey: SigningKey<Sig = Self>;
+    type AggregateSig: AggregateAuthenticator<Sig = Self>;
 }
 
 /// Trait impl'd by a public / private key pair in asymmetric cryptography.

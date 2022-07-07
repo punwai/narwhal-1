@@ -139,8 +139,8 @@ impl<'de> Deserialize<'de> for Ed25519PrivateKey {
 
 impl Authenticator for Ed25519Signature {
     type PubKey = Ed25519PublicKey;
-
     type PrivKey = Ed25519PrivateKey;
+    type AggregateSig = Ed25519AggregateSignature;
 }
 
 impl AsRef<[u8]> for Ed25519PrivateKey {
