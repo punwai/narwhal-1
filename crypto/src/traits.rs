@@ -135,14 +135,7 @@ pub trait KeyPair {
 }
 
 pub trait AggregateAuthenticator:
-    Display
-    + Default
-    + Serialize
-    + DeserializeOwned
-    + Send
-    + Sync
-    + 'static
-    + Clone
+    Display + Default + Serialize + DeserializeOwned + Send + Sync + 'static + Clone
 {
     type Sig: Authenticator;
     type PubKey: VerifyingKey<Sig = Self::Sig>;
@@ -151,8 +144,18 @@ pub trait AggregateAuthenticator:
     /// Parse a key from its byte representation
     fn aggregate(signatures: Vec<Self::Sig>) -> Result<Self, Error>;
 
-    /// Borrow a byte slice representing the serialized form of this key
-    fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), Error>;
+    fn add_signature(&mut self, signature: Self::Sig) -> Result<(), Error>;
 
-    fn batch_verify(sigs: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), Error>; 
+    /// Borrow a byte slice representing the serialized form of this key
+    fn verify(
+        &self,
+        pks: &[&<Self::Sig as Authenticator>::PubKey],
+        message: &[u8],
+    ) -> Result<(), Error>;
+
+    fn batch_verify(
+        sigs: &[&Self],
+        pks: &[&[&<Self::Sig as Authenticator>::PubKey]],
+        message: &[&[u8]],
+    ) -> Result<(), Error>;
 }

@@ -1,14 +1,15 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+use anyhow::Error;
 use base64ct::{Base64, Encoding};
 use serde::{de, Deserialize, Serialize};
 use signature::{Signature, Signer, Verifier};
-use std::{fmt::{self, Display}};
+use std::fmt::{self, Display};
 use std::str::FromStr;
-use anyhow::Error;
 
 use crate::traits::{
-    Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes, VerifyingKey, AggregateAuthenticator,
+    AggregateAuthenticator, Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes,
+    VerifyingKey,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -33,7 +34,6 @@ impl Verifier<Ed25519Signature> for Ed25519PublicKey {
         self.0.verify(msg, &signature.0)
     }
 }
-
 
 impl ToFromBytes for Ed25519PublicKey {
     fn from_bytes(bytes: &[u8]) -> Result<Self, signature::Error> {
@@ -176,7 +176,14 @@ impl Default for Ed25519Signature {
 
 impl Display for Ed25519AggregateSignature {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{:?}", self.0.iter().map(|x| Base64::encode_string(x.as_ref())).collect::<Vec<_>>())
+        write!(
+            f,
+            "{:?}",
+            self.0
+                .iter()
+                .map(|x| Base64::encode_string(x.as_ref()))
+                .collect::<Vec<_>>()
+        )
     }
 }
 
@@ -197,9 +204,17 @@ impl AggregateAuthenticator for Ed25519AggregateSignature {
         Ok(Self(signatures.iter().map(|s| s.0).collect()))
     }
 
-    /// Borrow a byte slice representing the serialized form of this key
-    fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), signature::Error>{
+    fn add_signature(&mut self, signature: Self::Sig) -> Result<(), signature::Error> {
+        self.0.push(signature.0);
+        Ok(())
+    }
 
+    /// Borrow a byte slice representing the serialized form of this key
+    fn verify(
+        &self,
+        pks: &[&<Self::Sig as Authenticator>::PubKey],
+        message: &[u8],
+    ) -> Result<(), signature::Error> {
         ed25519_dalek::verify_batch(
             &vec![message; pks.len()][..],
             &self.0.iter().map(|&x| x).collect::<Vec<_>>()[..],
@@ -209,11 +224,22 @@ impl AggregateAuthenticator for Ed25519AggregateSignature {
         Ok(())
     }
 
-    fn batch_verify(signatures: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), signature::Error> { 
+    fn batch_verify(
+        signatures: &[&Self],
+        pks: &[&[&<Self::Sig as Authenticator>::PubKey]],
+        message: &[&[u8]],
+    ) -> Result<(), signature::Error> {
         ed25519_dalek::verify_batch(
             message,
-            &signatures.iter().map(|&x| x.0.iter().map(|&y| y).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
-            &pks.iter().map(|x| x.iter().map(|y| y.0).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
+            &signatures
+                .iter()
+                .map(|&x| x.0.iter().map(|&y| y).collect::<Vec<_>>())
+                .flatten()
+                .collect::<Vec<_>>()[..],
+            &pks.iter()
+                .map(|x| x.iter().map(|y| y.0).collect::<Vec<_>>())
+                .flatten()
+                .collect::<Vec<_>>()[..],
         )
         .map_err(|_| signature::Error::new())?;
         Ok(())
@@ -255,10 +281,11 @@ impl FromStr for Ed25519KeyPair {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let value = Base64::decode_vec(s).map_err(|e| anyhow::anyhow!("{}", e.to_string()))?;
-        let kp = ed25519_dalek::Keypair::from_bytes(&value).map_err(|e| anyhow::anyhow!("{}", e.to_string()))?;
-        Ok(Ed25519KeyPair{
+        let kp = ed25519_dalek::Keypair::from_bytes(&value)
+            .map_err(|e| anyhow::anyhow!("{}", e.to_string()))?;
+        Ok(Ed25519KeyPair {
             name: Ed25519PublicKey(kp.public),
-            secret: Ed25519PrivateKey(kp.secret)
+            secret: Ed25519PrivateKey(kp.secret),
         })
     }
 }
