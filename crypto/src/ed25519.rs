@@ -234,6 +234,16 @@ impl AggregateAuthenticator for Ed25519AggregateSignature {
         pks: Vec<Vec<&Self::PubKey>>,
         messages: Vec<Vec<u8>>
     ) -> Result<(), signature::Error> {
+        if pks.len() != messages.len() || messages.len() != signatures.len() {
+            return Err(signature::Error::new());
+        }
+        let mut inner_messages: Vec<&[u8]> = Vec::new();
+        for i in 0..messages.len() {
+            for _ in 0..pks[i].len() {
+                inner_messages.push(&messages[i][..]);
+            }
+        }
+
         ed25519_dalek::verify_batch(
             &messages.iter().map(|x| &x[..]).collect::<Vec<_>>()[..],
             &signatures
