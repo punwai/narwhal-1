@@ -232,10 +232,10 @@ impl AggregateAuthenticator for Ed25519AggregateSignature {
     fn batch_verify(
         signatures: Vec<&Self>,
         pks: Vec<Vec<&Self::PubKey>>,
-        messages: Vec<&[u8]>
+        messages: Vec<Vec<u8>>
     ) -> Result<(), signature::Error> {
         ed25519_dalek::verify_batch(
-            &messages.iter().map(|&x| x).collect::<Vec<_>>()[..],
+            &messages.iter().map(|x| &x[..]).collect::<Vec<_>>()[..],
             &signatures
                 .iter()
                 .map(|&x| x.0.iter().map(|&y| y).collect::<Vec<_>>())
