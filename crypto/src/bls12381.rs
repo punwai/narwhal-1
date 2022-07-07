@@ -53,7 +53,7 @@ pub struct BLS12381Signature {
 #[readonly::make]
 #[derive(Debug, Clone)]
 pub struct BLS12381AggregateSignature{
-    pub sig: blst::AggregateSignature,
+    pub sig: blst::Signature,
     pub bytes: OnceCell<[u8; BLS_SIGNATURE_LENGTH]>,
 }
 
@@ -379,7 +379,72 @@ impl Signer<BLS12381Signature> for BLS12381KeyPair {
     }
 }
 
+impl BLS12381AggregateSignature {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, signature::Error> {
+        let sig = blst::Signature::from_bytes(bytes).map_err(|_e| signature::Error::new())?;
+        Ok(BLS12381AggregateSignature {
+            sig,
+            bytes: OnceCell::new(),
+        })
+    }
+}
+
+impl AsRef<[u8]> for BLS12381AggregateSignature {
+    fn as_ref(&self) -> &[u8] {
+        self.bytes
+            .get_or_try_init::<_, eyre::Report>(|| Ok(self.sig.to_bytes()))
+            .expect("OnceCell invariant violated")
+    }
+}
+
+impl Display for BLS12381AggregateSignature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}", Base64::encode_string(self.as_ref()))
+    }
+}
+
+// see [#34](https://github.com/MystenLabs/narwhal/issues/34)
+impl Default for BLS12381AggregateSignature {
+    fn default() -> Self {
+        let ikm: [u8; 32] = [
+            0x93, 0xad, 0x7e, 0x65, 0xde, 0xad, 0x05, 0x2a, 0x08, 0x3a, 0x91, 0x0c, 0x8b, 0x72,
+            0x85, 0x91, 0x46, 0x4c, 0xca, 0x56, 0x60, 0x5b, 0xb0, 0x56, 0xed, 0xfe, 0x2b, 0x60,
+            0xa6, 0x3c, 0x48, 0x99,
+        ];
+
+        let sk = blst::SecretKey::key_gen(&ikm, &[]).unwrap();
+        let msg = b"hello foo";
+        let sig = sk.sign(msg, DST, &[]);
+
+        BLS12381AggregateSignature {
+            sig: sig,
+            bytes: OnceCell::new()
+        }
+    }
+}
+
+impl Serialize for BLS12381AggregateSignature {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.as_ref().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for BLS12381AggregateSignature {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let bytes = <SerdeByteBuf>::deserialize(deserializer)?;
+        Self::from_bytes(&bytes).map_err(SerdeError::custom)
+    }
+}
+
 impl AggregateAuthenticator for BLS12381AggregateSignature {
+    type PrivKey = BLS12381PrivateKey;
+    type PubKey = BLS12381PublicKey;
     type Sig = BLS12381Signature;
 
     /// Parse a key from its byte representation
@@ -389,7 +454,7 @@ impl AggregateAuthenticator for BLS12381AggregateSignature {
             true
         )
         .map(|sig| BLS12381AggregateSignature {
-            sig,
+            sig: sig.to_signature(),
             bytes: OnceCell::new(),
         })
         .map_err(|_| signature::Error::new())
@@ -397,8 +462,7 @@ impl AggregateAuthenticator for BLS12381AggregateSignature {
 
     /// Borrow a byte slice representing the serialized form of this key
     fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), signature::Error>{
-        let sig = self.sig.to_signature();
-        let result = sig.fast_aggregate_verify(
+        let result = self.sig.fast_aggregate_verify(
             true,
             message,
             DST,
@@ -412,7 +476,7 @@ impl AggregateAuthenticator for BLS12381AggregateSignature {
 
     fn batch_verify(signatures: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), signature::Error> { 
         for i in 0..signatures.len() {
-            let sig = signatures[i].sig.to_signature();
+            let sig = signatures[i].sig;
             let result = sig.fast_aggregate_verify(
                 true,
                 message[i],
@@ -426,4 +490,3 @@ impl AggregateAuthenticator for BLS12381AggregateSignature {
         Ok(())
     }
 }
-

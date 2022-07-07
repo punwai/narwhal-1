@@ -20,9 +20,7 @@ pub struct Ed25519PrivateKey(pub ed25519_dalek::SecretKey);
 pub struct Ed25519Signature(pub ed25519_dalek::Signature);
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct Ed25519AggregateSignature {
-    pub sigs: Vec<ed25519_dalek::Signature>
-}
+pub struct Ed25519AggregateSignature(pub Vec<ed25519_dalek::Signature>);
 
 impl VerifyingKey for Ed25519PublicKey {
     type PrivKey = Ed25519PrivateKey;
@@ -169,11 +167,56 @@ impl Display for Ed25519Signature {
     }
 }
 
-// see [#34](https://github.com/MystenLabs/narwhal/issues/34)
 impl Default for Ed25519Signature {
     fn default() -> Self {
         let sig = ed25519_dalek::Signature::from_bytes(&[0u8; 64]).unwrap();
         Ed25519Signature(sig)
+    }
+}
+
+impl Display for Ed25519AggregateSignature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{:?}", self.0.iter().map(|x| Base64::encode_string(x.as_ref())).collect::<Vec<_>>())
+    }
+}
+
+// see [#34](https://github.com/MystenLabs/narwhal/issues/34)
+impl Default for Ed25519AggregateSignature {
+    fn default() -> Self {
+        Ed25519AggregateSignature(Vec::new())
+    }
+}
+
+impl AggregateAuthenticator for Ed25519AggregateSignature {
+    type Sig = Ed25519Signature;
+    type PrivKey = Ed25519PrivateKey;
+    type PubKey = Ed25519PublicKey;
+
+    /// Parse a key from its byte representation
+    fn aggregate(signatures: Vec<Self::Sig>) -> Result<Self, signature::Error> {
+        Ok(Self(signatures.iter().map(|s| s.0).collect()))
+    }
+
+    /// Borrow a byte slice representing the serialized form of this key
+    fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), signature::Error>{
+
+        ed25519_dalek::verify_batch(
+            &vec![message; pks.len()][..],
+            &self.0.iter().map(|&x| x).collect::<Vec<_>>()[..],
+            &pks.iter().map(|x| x.0).collect::<Vec<_>>()[..],
+        )
+        .map_err(|_| signature::Error::new())?;
+        Ok(())
+    }
+
+    fn batch_verify(signatures: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), signature::Error> { 
+        ed25519_dalek::verify_batch(
+            message,
+            &signatures.iter().map(|&x| x.0.iter().map(|&y| y).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
+            &pks.iter().map(|x| x.iter().map(|y| y.0).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
+        )
+        .map_err(|_| signature::Error::new())?;
+        Ok(())
     }
 }
 
@@ -235,38 +278,5 @@ impl Signer<Ed25519Signature> for Ed25519KeyPair {
         let pubkey: &ed25519_dalek::PublicKey = &self.name.0;
         let expanded_privkey: ed25519_dalek::ExpandedSecretKey = (privkey).into();
         Ok(Ed25519Signature(expanded_privkey.sign(msg, pubkey)))
-    }
-}
-
-impl AggregateAuthenticator for Ed25519AggregateSignature {
-    type Sig = Ed25519Signature;
-
-    /// Parse a key from its byte representation
-    fn aggregate(signatures: Vec<Self::Sig>) -> Result<Self, signature::Error> {
-        Ok(Self {
-            sigs: signatures.iter().map(|s| s.0).collect()
-        })
-    }
-
-    /// Borrow a byte slice representing the serialized form of this key
-    fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), signature::Error>{
-
-        ed25519_dalek::verify_batch(
-            &vec![message; pks.len()][..],
-            &self.sigs.iter().map(|&x| x).collect::<Vec<_>>()[..],
-            &pks.iter().map(|x| x.0).collect::<Vec<_>>()[..],
-        )
-        .map_err(|error| signature::Error::new())?;
-        Ok(())
-    }
-
-    fn batch_verify(signatures: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), signature::Error> { 
-        ed25519_dalek::verify_batch(
-            message,
-            &signatures.iter().map(|&x| x.sigs.iter().map(|&y| y).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
-            &pks.iter().map(|x| x.iter().map(|y| y.0).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
-        )
-        .map_err(|error| signature::Error::new())?;
-        Ok(())
     }
 }
