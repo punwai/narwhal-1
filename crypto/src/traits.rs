@@ -156,7 +156,7 @@ pub trait AggregateAuthenticator:
 
     fn batch_verify(
         sigs: &[&Self],
-        pks: &[&[&<Self::Sig as Authenticator>::PubKey]],
+        pks: &[&[&Self::PubKey]],
         message: &[&[u8]],
     ) -> Result<(), Error>;
 }
