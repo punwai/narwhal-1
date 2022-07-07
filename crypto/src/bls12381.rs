@@ -469,6 +469,22 @@ impl AggregateAuthenticator for BLS12381AggregateSignature {
         }
     }
 
+    fn add_aggregate(&mut self, signature: Self) -> Result<(), signature::Error> {
+        match self.sig {
+            Some(ref mut sig) => {
+                blst::AggregateSignature::from_signature(sig)
+                    .add_aggregate(&blst::AggregateSignature::from_signature(
+                        &signature.sig.ok_or(signature::Error::new())?
+                    ));
+                Ok(())
+            }
+            None => {
+                self.sig = signature.sig;
+                Ok(())
+            }
+        }
+    }
+
     /// Borrow a byte slice representing the serialized form of this key
     fn verify(
         &self,

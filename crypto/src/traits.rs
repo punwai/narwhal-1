@@ -147,6 +147,8 @@ pub trait AggregateAuthenticator:
 
     fn add_signature(&mut self, signature: Self::Sig) -> Result<(), Error>;
 
+    fn add_aggregate(&mut self, signature: Self) -> Result<(), Error>;
+
     /// Borrow a byte slice representing the serialized form of this key
     fn verify(
         &self,

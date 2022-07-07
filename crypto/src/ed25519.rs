@@ -209,6 +209,11 @@ impl AggregateAuthenticator for Ed25519AggregateSignature {
         Ok(())
     }
 
+    fn add_aggregate(&mut self, mut signature: Self) -> Result<(), signature::Error> {
+        self.0.append(&mut signature.0);
+        Ok(())
+    }
+
     /// Borrow a byte slice representing the serialized form of this key
     fn verify(
         &self,
