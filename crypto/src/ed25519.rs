@@ -8,7 +8,7 @@ use std::str::FromStr;
 use anyhow::Error;
 
 use crate::traits::{
-    Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes, VerifyingKey,
+    Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes, VerifyingKey, AggregateAuthenticator,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,6 +18,11 @@ pub struct Ed25519PrivateKey(pub ed25519_dalek::SecretKey);
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Ed25519Signature(pub ed25519_dalek::Signature);
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Ed25519AggregateSignature {
+    pub sigs: Vec<ed25519_dalek::Signature>
+}
 
 impl VerifyingKey for Ed25519PublicKey {
     type PrivKey = Ed25519PrivateKey;
@@ -30,6 +35,7 @@ impl Verifier<Ed25519Signature> for Ed25519PublicKey {
         self.0.verify(msg, &signature.0)
     }
 }
+
 
 impl ToFromBytes for Ed25519PublicKey {
     fn from_bytes(bytes: &[u8]) -> Result<Self, signature::Error> {
@@ -229,5 +235,38 @@ impl Signer<Ed25519Signature> for Ed25519KeyPair {
         let pubkey: &ed25519_dalek::PublicKey = &self.name.0;
         let expanded_privkey: ed25519_dalek::ExpandedSecretKey = (privkey).into();
         Ok(Ed25519Signature(expanded_privkey.sign(msg, pubkey)))
+    }
+}
+
+impl AggregateAuthenticator for Ed25519AggregateSignature {
+    type Sig = Ed25519Signature;
+
+    /// Parse a key from its byte representation
+    fn aggregate(signatures: Vec<Self::Sig>) -> Result<Self, signature::Error> {
+        Ok(Self {
+            sigs: signatures.iter().map(|s| s.0).collect()
+        })
+    }
+
+    /// Borrow a byte slice representing the serialized form of this key
+    fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), signature::Error>{
+
+        ed25519_dalek::verify_batch(
+            &vec![message; pks.len()][..],
+            &self.sigs.iter().map(|&x| x).collect::<Vec<_>>()[..],
+            &pks.iter().map(|x| x.0).collect::<Vec<_>>()[..],
+        )
+        .map_err(|error| signature::Error::new())?;
+        Ok(())
+    }
+
+    fn batch_verify(signatures: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), signature::Error> { 
+        ed25519_dalek::verify_batch(
+            message,
+            &signatures.iter().map(|&x| x.sigs.iter().map(|&y| y).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
+            &pks.iter().map(|x| x.iter().map(|y| y.0).collect::<Vec<_>>()).flatten().collect::<Vec<_>>()[..],
+        )
+        .map_err(|error| signature::Error::new())?;
+        Ok(())
     }
 }

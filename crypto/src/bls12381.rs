@@ -21,7 +21,7 @@ use serde_bytes::ByteBuf as SerdeByteBuf;
 use signature::{Signature, Signer, Verifier};
 
 use crate::traits::{
-    Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes, VerifyingKey,
+    Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes, VerifyingKey, AggregateAuthenticator,
 };
 
 pub const BLS_PRIVATE_KEY_LENGTH: usize = 32;
@@ -47,6 +47,13 @@ pub struct BLS12381PrivateKey {
 #[derive(Debug, Clone)]
 pub struct BLS12381Signature {
     pub sig: blst::Signature,
+    pub bytes: OnceCell<[u8; BLS_SIGNATURE_LENGTH]>,
+}
+
+#[readonly::make]
+#[derive(Debug, Clone)]
+pub struct BLS12381AggregateSignature{
+    pub sig: blst::AggregateSignature,
     pub bytes: OnceCell<[u8; BLS_SIGNATURE_LENGTH]>,
 }
 
@@ -371,3 +378,52 @@ impl Signer<BLS12381Signature> for BLS12381KeyPair {
         })
     }
 }
+
+impl AggregateAuthenticator for BLS12381AggregateSignature {
+    type Sig = BLS12381Signature;
+
+    /// Parse a key from its byte representation
+    fn aggregate(signatures: Vec<Self::Sig>) -> Result<Self, signature::Error> {
+        blst::AggregateSignature::aggregate(
+            &signatures.iter().map(|x| &x.sig).collect::<Vec<_>>()[..],
+            true
+        )
+        .map(|sig| BLS12381AggregateSignature {
+            sig,
+            bytes: OnceCell::new(),
+        })
+        .map_err(|_| signature::Error::new())
+    }
+
+    /// Borrow a byte slice representing the serialized form of this key
+    fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), signature::Error>{
+        let sig = self.sig.to_signature();
+        let result = sig.fast_aggregate_verify(
+            true,
+            message,
+            DST,
+            &pks.iter().map(|x| &x.pubkey).collect::<Vec<_>>()[..]
+        );
+        if result != BLST_ERROR::BLST_SUCCESS {
+            return Err(signature::Error::new());
+        }
+        Ok(())
+    }
+
+    fn batch_verify(signatures: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), signature::Error> { 
+        for i in 0..signatures.len() {
+            let sig = signatures[i].sig.to_signature();
+            let result = sig.fast_aggregate_verify(
+                true,
+                message[i],
+                DST,
+                &pks[i].iter().map(|x| &x.pubkey).collect::<Vec<_>>()[..]
+            );
+            if result != BLST_ERROR::BLST_SUCCESS {
+                return Err(signature::Error::new());
+            }
+        }
+        Ok(())
+    }
+}
+

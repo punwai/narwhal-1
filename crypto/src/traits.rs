@@ -39,6 +39,19 @@ pub trait ToFromBytes: AsRef<[u8]> + Debug + Sized {
     }
 }
 
+// - and we need a trait to base the definition of EncodeDecodeBase64 as an extension trait on.
+pub trait AggregateAuthenticator: Debug + Sized {
+    type Sig: Authenticator;
+
+    /// Parse a key from its byte representation
+    fn aggregate(signatures: Vec<Self::Sig>) -> Result<Self, Error>;
+
+    /// Borrow a byte slice representing the serialized form of this key
+    fn verify(&self, pks: &[&<Self::Sig as Authenticator>::PubKey], message: &[u8]) -> Result<(), Error>;
+
+    fn batch_verify(sigs: &[&Self], pks: &[&[&<Self::Sig as Authenticator>::PubKey]], message: &[&[u8]]) -> Result<(), Error>; 
+}
+
 /// Cryptographic material with an immediate conversion to/from Base64 strings.
 ///
 /// This is an [extension trait](https://rust-lang.github.io/rfcs/0445-extension-trait-conventions.html) of `ToFromBytes` above.
