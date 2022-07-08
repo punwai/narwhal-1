@@ -335,8 +335,8 @@ impl Signer<BLS12381Signature> for BLS12381PrivateKey {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")] // necessary so as not to deser under a != type
 pub struct BLS12381KeyPair {
-    name: BLS12381PublicKey,
-    secret: BLS12381PrivateKey,
+    pub name: BLS12381PublicKey,
+    pub secret: BLS12381PrivateKey,
 }
 
 impl KeyPair for BLS12381KeyPair {
