@@ -1,11 +1,13 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-use anyhow::Error;
 use base64ct::{Base64, Encoding};
 use serde::{de, Deserialize, Serialize};
 use signature::{Signature, Signer, Verifier};
 use std::fmt::{self, Display};
 use std::str::FromStr;
+use sha3::Sha3_256;
+use hkdf::Hkdf;
+
 
 use crate::traits::{
     AggregateAuthenticator, Authenticator, EncodeDecodeBase64, KeyPair, SigningKey, ToFromBytes,
@@ -288,6 +290,24 @@ impl KeyPair for Ed25519KeyPair {
             name: Ed25519PublicKey(kp.public),
             secret: Ed25519PrivateKey(kp.secret),
         }
+    }
+
+    fn deterministic_generate(seed: &[u8], id: &[u8], domain: &[u8]) -> Result<Self, signature::Error> {
+        let hk = Hkdf::<Sha3_256>::new(Some(id), seed);
+        let mut okm = [0u8; ed25519_dalek::SECRET_KEY_LENGTH];
+        hk.expand(domain, &mut okm)
+            .map_err(|e| signature::Error::new())?;
+
+        // This should never fail, as we ensured the HKDF output is SECRET_KEY_LENGTH bytes.
+        let ed25519_secret_key = Self::PrivKey::from_bytes(&okm)
+            .map_err(|e| signature::Error::new())?;
+        let ed25519_public_key = ed25519_dalek::PublicKey::from(&ed25519_secret_key.0);
+
+        let keypair = Ed25519KeyPair {
+            name: Ed25519PublicKey(ed25519_public_key),
+            secret: ed25519_secret_key
+        };
+        Ok(keypair)
     }
 }
 

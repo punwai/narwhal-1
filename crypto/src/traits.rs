@@ -39,6 +39,10 @@ pub trait ToFromBytes: AsRef<[u8]> + Debug + Sized {
     }
 }
 
+pub trait IntoBytes<const BYTE_LENGTH: usize> {
+    fn into_bytes(&self) -> [u8; BYTE_LENGTH];
+} 
+
 /// Cryptographic material with an immediate conversion to/from Base64 strings.
 ///
 /// This is an [extension trait](https://rust-lang.github.io/rfcs/0445-extension-trait-conventions.html) of `ToFromBytes` above.
@@ -127,12 +131,13 @@ pub trait Authenticator:
 
 /// Trait impl'd by a public / private key pair in asymmetric cryptography.
 ///
-pub trait KeyPair {
+pub trait KeyPair: Sized {
     type PubKey: VerifyingKey<PrivKey = Self::PrivKey>;
     type PrivKey: SigningKey<PubKey = Self::PubKey>;
     fn public(&'_ self) -> &'_ Self::PubKey;
     fn private(&'_ self) -> &'_ Self::PrivKey;
     fn generate<R: CryptoRng + RngCore>(rng: &mut R) -> Self;
+    fn deterministic_generate(seed: &[u8], id: &[u8], domain: &[u8]) -> Result<Self, signature::Error>;
 }
 
 pub trait AggregateAuthenticator:

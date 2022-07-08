@@ -9,6 +9,8 @@ use std::{
 use ::blst::{blst_scalar, blst_scalar_from_uint64, BLST_ERROR};
 use base64ct::{Base64, Encoding};
 use blst::min_sig as blst;
+use hkdf::Hkdf;
+use sha3::Sha3_256;
 use once_cell::sync::OnceCell;
 use rand::{rngs::OsRng, RngCore};
 
@@ -365,6 +367,24 @@ impl KeyPair for BLS12381KeyPair {
                 bytes: OnceCell::new(),
             },
         }
+    }
+
+    fn deterministic_generate(seed: &[u8], id: &[u8], domain: &[u8]) -> Result<Self, signature::Error> {
+        let hk = Hkdf::<Sha3_256>::new(Some(id), seed);
+        let mut ikm = [0u8; BLS_PRIVATE_KEY_LENGTH];
+        hk.expand(domain, &mut ikm)
+            .map_err(|_| signature::Error::new())?;
+
+        // This should never fail, as we ensured the HKDF output is SECRET_KEY_LENGTH bytes.
+        let bls12381_secret_key = blst::SecretKey::key_gen(&ikm, &[])
+            .map_err(|_| signature::Error::new())?;
+        let bls12381_public_key = bls12381_secret_key.sk_to_pk();
+
+        let keypair = BLS12381KeyPair {
+            name: BLS12381PublicKey { pubkey: bls12381_public_key, bytes: OnceCell::new() },
+            secret: BLS12381PrivateKey { privkey: bls12381_secret_key, bytes: OnceCell::new() } 
+        };
+        Ok(keypair)
     }
 }
 
