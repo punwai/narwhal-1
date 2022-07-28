@@ -46,6 +46,20 @@
 <span id="40">40</span>
 <span id="41">41</span>
 <span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2021, Facebook, Inc. and its affiliates</span>
 <span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -56,27 +70,33 @@
     <span class="ident">rust_2021_compatibility</span>
 )]</span>
 
+<span class="kw">mod</span> <span class="ident">bounded_executor</span>;
 <span class="kw">mod</span> <span class="ident">primary</span>;
 <span class="kw">mod</span> <span class="ident">retry</span>;
 <span class="kw">mod</span> <span class="ident">worker</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">bounded_executor::BoundedExecutor</span>,
     <span class="ident">primary</span>::{<span class="ident">PrimaryNetwork</span>, <span class="ident">PrimaryToWorkerNetwork</span>},
     <span class="ident">retry::RetryConfig</span>,
-    <span class="ident">worker::WorkerNetwork</span>,
+    <span class="ident">worker</span>::{<span class="ident">WorkerNetwork</span>, <span class="ident">WorkerToPrimaryNetwork</span>},
 };
 
+<span class="comment">// the result of our network messages</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MessageResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">tonic::Response</span><span class="op">&lt;</span><span class="ident">types::Empty</span><span class="op">&gt;</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span>;
+
+<span class="doccomment">/// This adapter will make a [`tokio::task::JoinHandle`] abort its handled task when the handle is dropped.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CancelHandler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">tokio::task::JoinHandle</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CancelOnDropHandler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">tokio::task::JoinHandle</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">CancelHandler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">CancelOnDropHandler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">abort</span>();
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">std::future::Future</span> <span class="kw">for</span> <span class="ident">CancelHandler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">std::future::Future</span> <span class="kw">for</span> <span class="ident">CancelOnDropHandler</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
 
     <span class="kw">fn</span> <span class="ident">poll</span>(
@@ -88,6 +108,14 @@
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">poll_unpin</span>(<span class="ident">cx</span>).<span class="ident">map</span>(<span class="ident">Result::unwrap</span>)
     }
 }
+
+<span class="comment">// This is the maximum number of network tasks that we will create for sending messages. It is a</span>
+<span class="comment">// limit per network struct - PrimaryNetwork, PrimaryToWorkerNetwork, and WorkerNetwork each have</span>
+<span class="comment">// their own limit.</span>
+<span class="comment">//</span>
+<span class="comment">// The exact number here probably isn&#39;t important, the key things is that it should be finite so</span>
+<span class="comment">// that we don&#39;t create unbounded numbers of tasks.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAX_TASK_CONCURRENCY</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">200</span>;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="network" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (27eb6d701 2022-07-04)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="network" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2643b1646 2022-07-27)" ></div>
 </body></html>

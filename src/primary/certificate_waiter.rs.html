@@ -172,69 +172,125 @@
 <span id="166">166</span>
 <span id="167">167</span>
 <span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2021, Facebook, Inc. and its affiliates</span>
 <span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::primary::Reconfigure</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::metrics::PrimaryMetrics</span>;
 <span class="kw">use</span> <span class="ident">config::Committee</span>;
-<span class="kw">use</span> <span class="ident">crypto::traits::VerifyingKey</span>;
+<span class="kw">use</span> <span class="ident">dashmap::DashMap</span>;
 <span class="kw">use</span> <span class="ident">futures</span>::{
     <span class="ident">future::try_join_all</span>,
     <span class="ident">stream</span>::{<span class="ident">futures_unordered::FuturesUnordered</span>, <span class="ident">StreamExt</span> <span class="kw">as</span> <span class="kw">_</span>},
 };
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">collections::HashMap</span>,
-    <span class="ident">sync</span>::{
-        <span class="ident">atomic</span>::{<span class="ident">AtomicU64</span>, <span class="ident">Ordering</span>},
-        <span class="ident">Arc</span>,
-    },
+<span class="kw">use</span> <span class="ident">once_cell::sync::OnceCell</span>;
+<span class="kw">use</span> <span class="ident">std::sync</span>::{
+    <span class="ident">atomic</span>::{<span class="ident">AtomicU64</span>, <span class="ident">Ordering</span>},
+    <span class="ident">Arc</span>,
 };
 <span class="kw">use</span> <span class="ident">store::Store</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::{
     <span class="ident">sync</span>::{
-        <span class="ident">mpsc</span>::{<span class="ident">channel</span>, <span class="ident">Receiver</span>, <span class="ident">Sender</span>},
-        <span class="ident">watch</span>,
+        <span class="ident">mpsc</span>::{<span class="ident">Receiver</span>, <span class="ident">Sender</span>},
+        <span class="ident">oneshot</span>, <span class="ident">watch</span>,
     },
     <span class="ident">task::JoinHandle</span>,
+    <span class="ident">time</span>::{<span class="ident">sleep</span>, <span class="ident">Duration</span>, <span class="ident">Instant</span>},
 };
 <span class="kw">use</span> <span class="ident">tracing::error</span>;
 <span class="kw">use</span> <span class="ident">types</span>::{
     <span class="ident">error</span>::{<span class="ident">DagError</span>, <span class="ident">DagResult</span>},
-    <span class="ident">Certificate</span>, <span class="ident">CertificateDigest</span>, <span class="ident">HeaderDigest</span>, <span class="ident">Round</span>,
+    <span class="ident">Certificate</span>, <span class="ident">CertificateDigest</span>, <span class="ident">HeaderDigest</span>, <span class="ident">ReconfigureNotification</span>, <span class="ident">Round</span>,
 };
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;tests/certificate_waiter_tests.rs&quot;</span>]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">certificate_waiter_tests</span>;
+
+<span class="doccomment">/// The resolution of the timer that checks whether we received replies to our parent requests, and triggers</span>
+<span class="doccomment">/// a round of GC if we didn&#39;t.</span>
+<span class="kw">const</span> <span class="ident">GC_RESOLUTION</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">10_000</span>;
 
 <span class="doccomment">/// Waits to receive all the ancestors of a certificate before looping it back to the `Core`</span>
 <span class="doccomment">/// for further processing.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CertificateWaiter</span><span class="op">&lt;</span><span class="ident">PublicKey</span>: <span class="ident">VerifyingKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CertificateWaiter</span> {
     <span class="doccomment">/// The committee information.</span>
-    <span class="ident">committee</span>: <span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span>,
+    <span class="ident">committee</span>: <span class="ident">Committee</span>,
     <span class="doccomment">/// The persistent storage.</span>
-    <span class="ident">store</span>: <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">store</span>: <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The current consensus round (used for cleanup).</span>
     <span class="ident">consensus_round</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicU64</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The depth of the garbage collector.</span>
     <span class="ident">gc_depth</span>: <span class="ident">Round</span>,
     <span class="doccomment">/// Watch channel notifying of epoch changes, it is only used for cleanup.</span>
-    <span class="ident">rx_reconfigure</span>: <span class="ident">watch::Receiver</span><span class="op">&lt;</span><span class="ident">Reconfigure</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">rx_reconfigure</span>: <span class="ident">watch::Receiver</span><span class="op">&lt;</span><span class="ident">ReconfigureNotification</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Receives sync commands from the `Synchronizer`.</span>
-    <span class="ident">rx_synchronizer</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">rx_synchronizer</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Loops back to the core certificates for which we got all parents.</span>
-    <span class="ident">tx_core</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">tx_core</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>,
     <span class="doccomment">/// List of digests (certificates) that are waiting to be processed. Their processing will</span>
     <span class="doccomment">/// resume when we get all their dependencies. The map holds a cancellation `Sender`</span>
     <span class="doccomment">/// which we can use to give up on a certificate.</span>
-    <span class="ident">pending</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">HeaderDigest</span>, (<span class="ident">Round</span>, <span class="ident">Sender</span><span class="op">&lt;</span>()<span class="op">&gt;</span>)<span class="op">&gt;</span>,
+    <span class="comment">// TODO: remove the OnceCell once drain_filter stabilizes</span>
+    <span class="ident">pending</span>: <span class="ident">DashMap</span><span class="op">&lt;</span><span class="ident">HeaderDigest</span>, (<span class="ident">Round</span>, <span class="ident">OnceCell</span><span class="op">&lt;</span><span class="ident">oneshot::Sender</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+    <span class="doccomment">/// The metrics handler</span>
+    <span class="ident">metrics</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">PrimaryMetrics</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">PublicKey</span>: <span class="ident">VerifyingKey</span><span class="op">&gt;</span> <span class="ident">CertificateWaiter</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">CertificateWaiter</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn</span>(
-        <span class="ident">committee</span>: <span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span>,
-        <span class="ident">store</span>: <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">committee</span>: <span class="ident">Committee</span>,
+        <span class="ident">store</span>: <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&gt;</span>,
         <span class="ident">consensus_round</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicU64</span><span class="op">&gt;</span>,
         <span class="ident">gc_depth</span>: <span class="ident">Round</span>,
-        <span class="ident">rx_reconfigure</span>: <span class="ident">watch::Receiver</span><span class="op">&lt;</span><span class="ident">Reconfigure</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">rx_synchronizer</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">tx_core</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">rx_reconfigure</span>: <span class="ident">watch::Receiver</span><span class="op">&lt;</span><span class="ident">ReconfigureNotification</span><span class="op">&gt;</span>,
+        <span class="ident">rx_synchronizer</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>,
+        <span class="ident">tx_core</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>,
+        <span class="ident">metrics</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">PrimaryMetrics</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="self">Self</span> {
@@ -245,7 +301,8 @@
                 <span class="ident">rx_reconfigure</span>,
                 <span class="ident">rx_synchronizer</span>,
                 <span class="ident">tx_core</span>,
-                <span class="ident">pending</span>: <span class="ident">HashMap::new</span>(),
+                <span class="ident">pending</span>: <span class="ident">DashMap::new</span>(),
+                <span class="ident">metrics</span>,
             }
             .<span class="ident">run</span>()
             .<span class="kw">await</span>;
@@ -256,10 +313,10 @@
     <span class="doccomment">/// delivers the specified header.</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">waiter</span>(
         <span class="ident">missing</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-        <span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">deliver</span>: <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span>,
-        <span class="kw-2">mut</span> <span class="ident">cancel_handle</span>: <span class="ident">Receiver</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">DagResult</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&gt;</span>,
+        <span class="ident">deliver</span>: <span class="ident">Certificate</span>,
+        <span class="ident">cancel_handle</span>: <span class="ident">oneshot::Receiver</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+    ) -&gt; <span class="ident">DagResult</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">waiting</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">missing</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">store</span>.<span class="ident">notify_read</span>(<span class="ident">x</span>)).<span class="ident">collect</span>();
 
         <span class="macro">tokio::select!</span> {
@@ -267,12 +324,15 @@
                 <span class="ident">result</span>.<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">deliver</span>).<span class="ident">map_err</span>(<span class="ident">DagError::from</span>)
             }
             <span class="comment">// the request for this certificate is obsolete, for instance because its round is obsolete (GC&#39;d).</span>
-            <span class="kw">_</span> <span class="op">=</span> <span class="ident">cancel_handle</span>.<span class="ident">recv</span>() =&gt; <span class="prelude-val">Ok</span>(<span class="ident">deliver</span>),
+            <span class="kw">_</span> <span class="op">=</span> <span class="ident">cancel_handle</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">deliver</span>),
         }
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">waiting</span> <span class="op">=</span> <span class="ident">FuturesUnordered::new</span>();
+
+        <span class="kw">let</span> <span class="ident">timer</span> <span class="op">=</span> <span class="ident">sleep</span>(<span class="ident">Duration::from_millis</span>(<span class="ident">GC_RESOLUTION</span>));
+        <span class="macro">tokio::pin!</span>(<span class="ident">timer</span>);
 
         <span class="kw">loop</span> {
             <span class="macro">tokio::select!</span> {
@@ -289,13 +349,15 @@
 
                     <span class="comment">// Add the certificate to the waiter pool. The waiter will return it to us when</span>
                     <span class="comment">// all its parents are in the store.</span>
-                    <span class="kw">let</span> <span class="ident">wait_for</span> <span class="op">=</span> <span class="ident">certificate</span>
-                        .<span class="ident">header</span>
-                        .<span class="ident">parents</span>
-                        .<span class="ident">iter</span>().<span class="ident">cloned</span>()
-                        .<span class="ident">collect</span>();
-                    <span class="kw">let</span> (<span class="ident">tx_cancel</span>, <span class="ident">rx_cancel</span>) <span class="op">=</span> <span class="ident">channel</span>(<span class="number">1</span>);
-                    <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">insert</span>(<span class="ident">header_id</span>, (<span class="ident">certificate</span>.<span class="ident">round</span>(), <span class="ident">tx_cancel</span>));
+                    <span class="kw">let</span> <span class="ident">wait_for</span> <span class="op">=</span> <span class="ident">certificate</span>.<span class="ident">header</span>.<span class="ident">parents</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
+                    <span class="kw">let</span> (<span class="ident">tx_cancel</span>, <span class="ident">rx_cancel</span>) <span class="op">=</span> <span class="ident">oneshot::channel</span>();
+                    <span class="comment">// TODO: remove all this once drain_filter is stabilized.</span>
+                    <span class="kw">let</span> <span class="ident">once_cancel</span> <span class="op">=</span> {
+                        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">OnceCell::new</span>();
+                        <span class="ident">inner</span>.<span class="ident">set</span>(<span class="ident">tx_cancel</span>).<span class="ident">expect</span>(<span class="string">&quot;OnceCell invariant violated&quot;</span>);
+                        <span class="ident">inner</span>
+                    };
+                    <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">insert</span>(<span class="ident">header_id</span>, (<span class="ident">certificate</span>.<span class="ident">round</span>(), <span class="ident">once_cancel</span>));
                     <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::waiter</span>(<span class="ident">wait_for</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">store</span>, <span class="ident">certificate</span>, <span class="ident">rx_cancel</span>);
                     <span class="ident">waiting</span>.<span class="ident">push</span>(<span class="ident">fut</span>);
                 }
@@ -316,30 +378,58 @@
                     <span class="ident">result</span>.<span class="ident">expect</span>(<span class="string">&quot;Committee channel dropped&quot;</span>);
                     <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rx_reconfigure</span>.<span class="ident">borrow_and_update</span>().<span class="ident">clone</span>();
                     <span class="kw">match</span> <span class="ident">message</span> {
-                        <span class="ident">Reconfigure::NewCommittee</span>(<span class="ident">committee</span>) =&gt; {
+                        <span class="ident">ReconfigureNotification::NewCommittee</span>(<span class="ident">committee</span>) =&gt; {
                             <span class="self">self</span>.<span class="ident">committee</span> <span class="op">=</span> <span class="ident">committee</span>;
+                            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Committee updated to {}&quot;</span>, <span class="self">self</span>.<span class="ident">committee</span>);
                             <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">clear</span>();
                         },
-                        <span class="ident">Reconfigure::Shutdown</span>(<span class="ident">_token</span>) =&gt; ()
+                        <span class="ident">ReconfigureNotification::Shutdown</span> =&gt; <span class="kw">return</span>
                     }
 
                 }
+                () <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">timer</span> =&gt; {
+                    <span class="comment">// We still would like to GC even if we do not receive anything from either the synchronizer or</span>
+                    <span class="comment">//  the Waiter. This can happen, as we may have asked for certificates that (at the time of ask)</span>
+                    <span class="comment">// were not past our GC bound, but which round swept up past our GC bound as we advanced rounds</span>
+                    <span class="comment">// &amp; caught up with the network.</span>
+                    <span class="comment">// Those certificates may get stuck in pending, unless we periodically clean up.</span>
+
+                    <span class="comment">// Reschedule the timer.</span>
+                    <span class="ident">timer</span>.<span class="ident">as_mut</span>().<span class="ident">reset</span>(<span class="ident">Instant::now</span>() <span class="op">+</span> <span class="ident">Duration::from_millis</span>(<span class="ident">GC_RESOLUTION</span>));
+                },
             }
 
             <span class="comment">// Cleanup internal state. Deliver the certificates waiting on garbage collected ancestors.</span>
             <span class="kw">let</span> <span class="ident">round</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">consensus_round</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>);
             <span class="kw">if</span> <span class="ident">round</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">gc_depth</span> {
                 <span class="kw">let</span> <span class="ident">gc_round</span> <span class="op">=</span> <span class="ident">round</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">gc_depth</span>;
-                <span class="kw">for</span> (<span class="ident">r</span>, <span class="ident">cancel_handle</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">values</span>() {
-                    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">r</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">gc_round</span> <span class="op">+</span> <span class="number">1</span> {
-                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">cancel_handle</span>.<span class="ident">send</span>(()).<span class="kw">await</span>;
+
+                <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">_digest</span>, (<span class="ident">r</span>, <span class="ident">once_cancel</span>)<span class="op">|</span> {
+                    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">r</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">gc_round</span> {
+                        <span class="comment">// note: this send can fail, harmlessly, if the certificate has been delivered (`notify_read`)</span>
+                        <span class="comment">// and the present code path fires before the corresponding `waiting` item is unpacked above.</span>
+                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">once_cancel</span>
+                            .<span class="ident">take</span>()
+                            .<span class="ident">expect</span>(<span class="string">&quot;This should be protected by a write lock&quot;</span>)
+                            .<span class="ident">send</span>(());
+                        <span class="bool-val">false</span>
+                    } <span class="kw">else</span> {
+                        <span class="bool-val">true</span>
                     }
-                }
-                <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="kw">_</span>, (<span class="ident">r</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">r</span> <span class="op">&gt;</span> <span class="ident">gc_round</span> <span class="op">+</span> <span class="number">1</span>);
+                });
             }
+
+            <span class="self">self</span>.<span class="ident">update_metrics</span>();
         }
+    }
+
+    <span class="kw">fn</span> <span class="ident">update_metrics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">metrics</span>
+            .<span class="ident">pending_elements_certificate_waiter</span>
+            .<span class="ident">with_label_values</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">committee</span>.<span class="ident">epoch</span>.<span class="ident">to_string</span>()])
+            .<span class="ident">set</span>(<span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i64</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="primary" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (27eb6d701 2022-07-04)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="primary" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2643b1646 2022-07-27)" ></div>
 </body></html>

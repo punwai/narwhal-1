@@ -735,6 +735,70 @@
 <span id="729">729</span>
 <span id="730">730</span>
 <span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2021, Facebook, Inc. and its affiliates</span>
 <span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -743,9 +807,8 @@
     <span class="ident">WorkerId</span>,
 };
 <span class="kw">use</span> <span class="ident">crypto</span>::{
-    <span class="ident">ed25519</span>::{<span class="ident">Ed25519KeyPair</span>, <span class="ident">Ed25519PublicKey</span>, <span class="ident">Ed25519Signature</span>},
-    <span class="ident">traits</span>::{<span class="ident">KeyPair</span>, <span class="ident">Signer</span>},
-    <span class="ident">Digest</span>, <span class="ident">Hash</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">traits</span>::{<span class="ident">KeyPair</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Signer</span> <span class="kw">as</span> <span class="kw">_</span>},
+    <span class="ident">Digest</span>, <span class="ident">Hash</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">KeyPair</span>, <span class="ident">PublicKey</span>, <span class="ident">Signature</span>,
 };
 <span class="kw">use</span> <span class="ident">futures::Stream</span>;
 <span class="kw">use</span> <span class="ident">multiaddr::Multiaddr</span>;
@@ -767,6 +830,8 @@
     <span class="ident">WorkerToWorkerServer</span>,
 };
 
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cluster</span>;
+
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HEADERS_CF</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;headers&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CERTIFICATES_CF</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;certificates&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PAYLOAD_CF</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;payload&quot;</span>;
@@ -782,7 +847,7 @@
 <span class="comment">////////////////////////////////////////////////////////////////</span>
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>(<span class="ident">rng_seed</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Ed25519KeyPair</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>(<span class="ident">rng_seed</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">KeyPair</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">seed</span> <span class="op">=</span> <span class="ident">rng_seed</span>.<span class="ident">into</span>().<span class="ident">unwrap_or</span>(<span class="number">0u64</span>).<span class="ident">to_le_bytes</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng_arg</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">4</span> {
@@ -790,23 +855,23 @@
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">StdRng::from_seed</span>(<span class="ident">rng_arg</span>);
-    (<span class="number">0</span>..<span class="number">4</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ed25519KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>()
+    (<span class="number">0</span>..<span class="number">4</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>()
 }
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">committee</span>(<span class="ident">rng_seed</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">committee</span>(<span class="ident">rng_seed</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">Committee</span> {
     <span class="ident">committee_from_keys</span>(<span class="kw-2">&amp;</span><span class="ident">keys</span>(<span class="ident">rng_seed</span>))
 }
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">committee_from_keys</span>(<span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519KeyPair</span>]) -&gt; <span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">committee_from_keys</span>(<span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">KeyPair</span>]) -&gt; <span class="ident">Committee</span> {
     <span class="ident">pure_committee_from_keys</span>(<span class="ident">keys</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_authority</span>() -&gt; <span class="ident">Authority</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_authority_with_port_getter</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnMut</span>() -&gt; <span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">get_port</span>: <span class="ident">F</span>) -&gt; <span class="ident">Authority</span> {
     <span class="kw">let</span> <span class="ident">primary</span> <span class="op">=</span> <span class="ident">PrimaryAddresses</span> {
-        <span class="ident">primary_to_primary</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+        <span class="ident">primary_to_primary</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
             .<span class="ident">parse</span>()
             .<span class="ident">unwrap</span>(),
-        <span class="ident">worker_to_primary</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+        <span class="ident">worker_to_primary</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
             .<span class="ident">parse</span>()
             .<span class="ident">unwrap</span>(),
     };
@@ -814,13 +879,13 @@
         (
             <span class="number">0</span>,
             <span class="ident">WorkerAddresses</span> {
-                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
             },
@@ -828,13 +893,13 @@
         (
             <span class="number">1</span>,
             <span class="ident">WorkerAddresses</span> {
-                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
             },
@@ -842,13 +907,13 @@
         (
             <span class="number">2</span>,
             <span class="ident">WorkerAddresses</span> {
-                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
             },
@@ -856,13 +921,13 @@
         (
             <span class="number">3</span>,
             <span class="ident">WorkerAddresses</span> {
-                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">primary_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">transactions</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
-                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_available_port</span>())
+                <span class="ident">worker_to_worker</span>: <span class="macro">format!</span>(<span class="string">&quot;/ip4/127.0.0.1/tcp/{}/http&quot;</span>, <span class="ident">get_port</span>())
                     .<span class="ident">parse</span>()
                     .<span class="ident">unwrap</span>(),
             },
@@ -879,7 +944,11 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pure_committee_from_keys</span>(<span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519KeyPair</span>]) -&gt; <span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_authority</span>() -&gt; <span class="ident">Authority</span> {
+    <span class="ident">make_authority_with_port_getter</span>(<span class="ident">get_available_port</span>)
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pure_committee_from_keys</span>(<span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">KeyPair</span>]) -&gt; <span class="ident">Committee</span> {
     <span class="ident">Committee</span> {
         <span class="ident">epoch</span>: <span class="ident">Epoch::default</span>(),
         <span class="ident">authorities</span>: <span class="ident">keys</span>
@@ -894,7 +963,7 @@
 <span class="comment">////////////////////////////////////////////////////////////////</span>
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mock_committee</span>(<span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519PublicKey</span>]) -&gt; <span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mock_committee</span>(<span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>]) -&gt; <span class="ident">Committee</span> {
     <span class="ident">Committee</span> {
         <span class="ident">epoch</span>: <span class="ident">Epoch::default</span>(),
         <span class="ident">authorities</span>: <span class="ident">keys</span>
@@ -916,7 +985,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_consensus_store</span>(<span class="ident">store_path</span>: <span class="kw-2">&amp;</span><span class="ident">std::path::Path</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ConsensusStore</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_consensus_store</span>(<span class="ident">store_path</span>: <span class="kw-2">&amp;</span><span class="ident">std::path::Path</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ConsensusStore</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">LAST_COMMITTED_CF</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;last_committed&quot;</span>;
     <span class="kw">const</span> <span class="ident">SEQUENCE_CF</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;sequence&quot;</span>;
 
@@ -924,7 +993,7 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Failed creating database&quot;</span>);
 
     <span class="kw">let</span> (<span class="ident">last_committed_map</span>, <span class="ident">sequence_map</span>) <span class="op">=</span> <span class="macro">reopen!</span>(<span class="kw-2">&amp;</span><span class="ident">rocksdb</span>,
-        <span class="ident">LAST_COMMITTED_CF</span>;<span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span>, <span class="ident">Round</span><span class="op">&gt;</span>,
+        <span class="ident">LAST_COMMITTED_CF</span>;<span class="op">&lt;</span><span class="ident">PublicKey</span>, <span class="ident">Round</span><span class="op">&gt;</span>,
         <span class="ident">SEQUENCE_CF</span>;<span class="op">&lt;</span><span class="ident">SequenceNumber</span>, <span class="ident">CertificateDigest</span><span class="op">&gt;</span>
     );
 
@@ -932,12 +1001,12 @@
 }
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">header</span>() -&gt; <span class="ident">Header</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">header</span>() -&gt; <span class="ident">Header</span> {
     <span class="ident">header_with_epoch</span>(<span class="kw-2">&amp;</span><span class="ident">committee</span>(<span class="prelude-val">None</span>))
 }
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">headers</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Header</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">headers</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Header</span><span class="op">&gt;</span> {
     <span class="ident">keys</span>(<span class="prelude-val">None</span>)
         .<span class="ident">into_iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">kp</span><span class="op">|</span> {
@@ -961,7 +1030,7 @@
 }
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">header_with_epoch</span>(<span class="ident">committee</span>: <span class="kw-2">&amp;</span><span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span>) -&gt; <span class="ident">Header</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">header_with_epoch</span>(<span class="ident">committee</span>: <span class="kw-2">&amp;</span><span class="ident">Committee</span>) -&gt; <span class="ident">Header</span> {
     <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">keys</span>(<span class="prelude-val">None</span>).<span class="ident">pop</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">Header</span> {
         <span class="ident">author</span>: <span class="ident">kp</span>.<span class="ident">public</span>().<span class="ident">clone</span>(),
@@ -983,16 +1052,16 @@
 }
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_header</span>() -&gt; <span class="ident">Header</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_header</span>() -&gt; <span class="ident">Header</span> {
     <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">keys</span>(<span class="prelude-val">None</span>).<span class="ident">pop</span>().<span class="ident">unwrap</span>();
 
     <span class="ident">fixture_header_builder</span>().<span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="ident">kp</span>).<span class="ident">unwrap</span>()
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_header_builder</span>() -&gt; <span class="ident">types::HeaderBuilder</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_header_builder</span>() -&gt; <span class="ident">types::HeaderBuilder</span> {
     <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">keys</span>(<span class="prelude-val">None</span>).<span class="ident">pop</span>().<span class="ident">unwrap</span>();
 
-    <span class="kw">let</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">types::HeaderBuilder</span>::<span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="ident">::default</span>();
+    <span class="kw">let</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">types::HeaderBuilder::default</span>();
     <span class="ident">builder</span>
         .<span class="ident">author</span>(<span class="ident">kp</span>.<span class="ident">public</span>().<span class="ident">clone</span>())
         .<span class="ident">round</span>(<span class="number">1</span>)
@@ -1003,6 +1072,28 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">digest</span>())
                 .<span class="ident">collect</span>(),
         )
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_headers_round</span>(
+    <span class="ident">prior_round</span>: <span class="ident">Round</span>,
+    <span class="ident">parents</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
+) -&gt; (<span class="ident">Round</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Header</span><span class="op">&gt;</span>) {
+    <span class="kw">let</span> <span class="ident">round</span> <span class="op">=</span> <span class="ident">prior_round</span> <span class="op">+</span> <span class="number">1</span>;
+    <span class="kw">let</span> <span class="ident">next_headers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">keys</span>(<span class="prelude-val">None</span>)
+        .<span class="ident">into_iter</span>()
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">kp</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">types::HeaderBuilder::default</span>();
+            <span class="ident">builder</span>
+                .<span class="ident">author</span>(<span class="ident">kp</span>.<span class="ident">public</span>().<span class="ident">clone</span>())
+                .<span class="ident">round</span>(<span class="ident">round</span>)
+                .<span class="ident">epoch</span>(<span class="number">0</span>)
+                .<span class="ident">parents</span>(<span class="ident">parents</span>.<span class="ident">clone</span>())
+                .<span class="ident">with_payload_batch</span>(<span class="ident">fixture_batch_with_transactions</span>(<span class="number">10</span>), <span class="number">0</span>)
+                .<span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="ident">kp</span>)
+                .<span class="ident">unwrap</span>()
+        })
+        .<span class="ident">collect</span>();
+    (<span class="ident">round</span>, <span class="ident">next_headers</span>)
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_payload</span>(<span class="ident">number_of_batches</span>: <span class="ident">u8</span>) -&gt; <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">BatchDigest</span>, <span class="ident">WorkerId</span><span class="op">&gt;</span> {
@@ -1023,7 +1114,7 @@
     <span class="ident">payload</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_header_with_payload</span>(<span class="ident">number_of_batches</span>: <span class="ident">u8</span>) -&gt; <span class="ident">Header</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixture_header_with_payload</span>(<span class="ident">number_of_batches</span>: <span class="ident">u8</span>) -&gt; <span class="ident">Header</span> {
     <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">keys</span>(<span class="prelude-val">None</span>).<span class="ident">pop</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">payload</span>: <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">BatchDigest</span>, <span class="ident">WorkerId</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">fixture_payload</span>(<span class="ident">number_of_batches</span>);
 
@@ -1048,28 +1139,34 @@
 }
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">votes</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">Header</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vote</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">votes</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">Header</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vote</span><span class="op">&gt;</span> {
     <span class="ident">keys</span>(<span class="prelude-val">None</span>)
         .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">kp</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">vote</span> <span class="op">=</span> <span class="ident">Vote</span> {
-                <span class="ident">id</span>: <span class="ident">header</span>.<span class="ident">id</span>,
-                <span class="ident">round</span>: <span class="ident">header</span>.<span class="ident">round</span>,
-                <span class="ident">epoch</span>: <span class="ident">header</span>.<span class="ident">epoch</span>,
-                <span class="ident">origin</span>: <span class="ident">header</span>.<span class="ident">author</span>.<span class="ident">clone</span>(),
-                <span class="ident">author</span>: <span class="ident">kp</span>.<span class="ident">public</span>().<span class="ident">clone</span>(),
-                <span class="ident">signature</span>: <span class="ident">Ed25519Signature::default</span>(),
-            };
-            <span class="ident">Vote</span> {
-                <span class="ident">signature</span>: <span class="ident">kp</span>.<span class="ident">sign</span>(<span class="ident">Digest::from</span>(<span class="ident">vote</span>.<span class="ident">digest</span>()).<span class="ident">as_ref</span>()),
-                ..<span class="ident">vote</span>
+        .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">kp</span><span class="op">|</span> {
+            <span class="comment">// we should not re-sign using the key of the authority</span>
+            <span class="comment">// that produced the header</span>
+            <span class="kw">if</span> <span class="ident">kp</span>.<span class="ident">public</span>() <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">header</span>.<span class="ident">author</span> {
+                <span class="prelude-val">None</span>
+            } <span class="kw">else</span> {
+                <span class="kw">let</span> <span class="ident">vote</span> <span class="op">=</span> <span class="ident">Vote</span> {
+                    <span class="ident">id</span>: <span class="ident">header</span>.<span class="ident">id</span>,
+                    <span class="ident">round</span>: <span class="ident">header</span>.<span class="ident">round</span>,
+                    <span class="ident">epoch</span>: <span class="ident">header</span>.<span class="ident">epoch</span>,
+                    <span class="ident">origin</span>: <span class="ident">header</span>.<span class="ident">author</span>.<span class="ident">clone</span>(),
+                    <span class="ident">author</span>: <span class="ident">kp</span>.<span class="ident">public</span>().<span class="ident">clone</span>(),
+                    <span class="ident">signature</span>: <span class="ident">Signature::default</span>(),
+                };
+                <span class="prelude-val">Some</span>(<span class="ident">Vote</span> {
+                    <span class="ident">signature</span>: <span class="ident">kp</span>.<span class="ident">sign</span>(<span class="ident">Digest::from</span>(<span class="ident">vote</span>.<span class="ident">digest</span>()).<span class="ident">as_ref</span>()),
+                    ..<span class="ident">vote</span>
+                })
             }
         })
         .<span class="ident">collect</span>()
 }
 
 <span class="comment">// Fixture</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">certificate</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">Header</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span>) -&gt; <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">certificate</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">Header</span>) -&gt; <span class="ident">Certificate</span> {
     <span class="ident">Certificate</span> {
         <span class="ident">header</span>: <span class="ident">header</span>.<span class="ident">clone</span>(),
         <span class="ident">votes</span>: <span class="ident">votes</span>(<span class="ident">header</span>)
@@ -1226,7 +1323,7 @@
 }
 
 <span class="comment">// helper method to get a name and a committee.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resolve_name_and_committee</span>() -&gt; (<span class="ident">Ed25519PublicKey</span>, <span class="ident">Committee</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resolve_name_and_committee</span>() -&gt; (<span class="ident">PublicKey</span>, <span class="ident">Committee</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">keys</span>(<span class="prelude-val">None</span>);
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">keys</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>(); <span class="comment">// Skip the header&#39; author.</span>
     <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">keys</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>();
@@ -1261,7 +1358,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize_batch_message</span>(<span class="ident">batch</span>: <span class="ident">Batch</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">worker::WorkerMessage</span>::<span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="ident">::Batch</span>(<span class="ident">batch</span>);
+    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">worker::WorkerMessage::Batch</span>(<span class="ident">batch</span>);
     <span class="ident">bincode::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>).<span class="ident">unwrap</span>()
 }
 
@@ -1306,11 +1403,8 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_optimal_certificates</span>(
     <span class="ident">range</span>: <span class="ident">RangeInclusive</span><span class="op">&lt;</span><span class="ident">Round</span><span class="op">&gt;</span>,
     <span class="ident">initial_parents</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519PublicKey</span>],
-) -&gt; (
-    <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-) {
+    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
+) -&gt; (<span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>) {
     <span class="ident">make_certificates</span>(<span class="ident">range</span>, <span class="ident">initial_parents</span>, <span class="ident">keys</span>, <span class="number">0.0</span>)
 }
 
@@ -1318,11 +1412,8 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_optimal_signed_certificates</span>(
     <span class="ident">range</span>: <span class="ident">RangeInclusive</span><span class="op">&lt;</span><span class="ident">Round</span><span class="op">&gt;</span>,
     <span class="ident">initial_parents</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519KeyPair</span>],
-) -&gt; (
-    <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-) {
+    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">KeyPair</span>],
+) -&gt; (<span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>) {
     <span class="ident">make_signed_certificates</span>(<span class="ident">range</span>, <span class="ident">initial_parents</span>, <span class="ident">keys</span>, <span class="number">0.0</span>)
 }
 
@@ -1346,17 +1437,14 @@
 <span class="kw">fn</span> <span class="ident">rounds_of_certificates</span>(
     <span class="ident">range</span>: <span class="ident">RangeInclusive</span><span class="op">&lt;</span><span class="ident">Round</span><span class="op">&gt;</span>,
     <span class="ident">initial_parents</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519PublicKey</span>],
+    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
     <span class="ident">failure_probability</span>: <span class="ident">f64</span>,
     <span class="ident">make_one_certificate</span>: <span class="kw">impl</span> <span class="ident">Fn</span>(
-        <span class="ident">Ed25519PublicKey</span>,
+        <span class="ident">PublicKey</span>,
         <span class="ident">Round</span>,
         <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-    ) -&gt; (<span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span>),
-) -&gt; (
-    <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-) {
+    ) -&gt; (<span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span>),
+) -&gt; (<span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">certificates</span> <span class="op">=</span> <span class="ident">VecDeque::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parents</span> <span class="op">=</span> <span class="ident">initial_parents</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next_parents</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
@@ -1380,12 +1468,9 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_certificates</span>(
     <span class="ident">range</span>: <span class="ident">RangeInclusive</span><span class="op">&lt;</span><span class="ident">Round</span><span class="op">&gt;</span>,
     <span class="ident">initial_parents</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519PublicKey</span>],
+    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
     <span class="ident">failure_probability</span>: <span class="ident">f64</span>,
-) -&gt; (
-    <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-) {
+) -&gt; (<span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>) {
     <span class="ident">rounds_of_certificates</span>(
         <span class="ident">range</span>,
         <span class="ident">initial_parents</span>,
@@ -1395,16 +1480,37 @@
     )
 }
 
+<span class="comment">// make rounds worth of unsigned certificates with the sampled number of parents</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_certificates_with_epoch</span>(
+    <span class="ident">range</span>: <span class="ident">RangeInclusive</span><span class="op">&lt;</span><span class="ident">Round</span><span class="op">&gt;</span>,
+    <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
+    <span class="ident">initial_parents</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
+    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
+) -&gt; (<span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">certificates</span> <span class="op">=</span> <span class="ident">VecDeque::new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parents</span> <span class="op">=</span> <span class="ident">initial_parents</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next_parents</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
+
+    <span class="kw">for</span> <span class="ident">round</span> <span class="kw">in</span> <span class="ident">range</span> {
+        <span class="ident">next_parents</span>.<span class="ident">clear</span>();
+        <span class="kw">for</span> <span class="ident">name</span> <span class="kw">in</span> <span class="ident">keys</span> {
+            <span class="kw">let</span> (<span class="ident">digest</span>, <span class="ident">certificate</span>) <span class="op">=</span>
+                <span class="ident">mock_certificate_with_epoch</span>(<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="ident">round</span>, <span class="ident">epoch</span>, <span class="ident">parents</span>.<span class="ident">clone</span>());
+            <span class="ident">certificates</span>.<span class="ident">push_back</span>(<span class="ident">certificate</span>);
+            <span class="ident">next_parents</span>.<span class="ident">insert</span>(<span class="ident">digest</span>);
+        }
+        <span class="ident">parents</span> <span class="op">=</span> <span class="ident">next_parents</span>.<span class="ident">clone</span>();
+    }
+    (<span class="ident">certificates</span>, <span class="ident">next_parents</span>)
+}
+
 <span class="comment">// make rounds worth of signed certificates with the sampled number of parents</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_signed_certificates</span>(
     <span class="ident">range</span>: <span class="ident">RangeInclusive</span><span class="op">&lt;</span><span class="ident">Round</span><span class="op">&gt;</span>,
     <span class="ident">initial_parents</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519KeyPair</span>],
+    <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">KeyPair</span>],
     <span class="ident">failure_probability</span>: <span class="ident">f64</span>,
-) -&gt; (
-    <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-) {
+) -&gt; (<span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Certificate</span><span class="op">&gt;</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">public_keys</span> <span class="op">=</span> <span class="ident">keys</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">k</span><span class="op">|</span> <span class="ident">k</span>.<span class="ident">public</span>().<span class="ident">clone</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
     <span class="kw">let</span> <span class="ident">generator</span> <span class="op">=</span> <span class="op">|</span><span class="ident">pk</span>, <span class="ident">round</span>, <span class="ident">parents</span><span class="op">|</span> <span class="ident">mock_signed_certificate</span>(<span class="ident">keys</span>, <span class="ident">pk</span>, <span class="ident">round</span>, <span class="ident">parents</span>);
 
@@ -1420,10 +1526,10 @@
 <span class="comment">// Creates an unsigned certificate from its given round, origin and parents,</span>
 <span class="comment">// Note: the certificate is unsigned</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mock_certificate</span>(
-    <span class="ident">origin</span>: <span class="ident">Ed25519PublicKey</span>,
+    <span class="ident">origin</span>: <span class="ident">PublicKey</span>,
     <span class="ident">round</span>: <span class="ident">Round</span>,
     <span class="ident">parents</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-) -&gt; (<span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span>) {
+) -&gt; (<span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span>) {
     <span class="kw">let</span> <span class="ident">certificate</span> <span class="op">=</span> <span class="ident">Certificate</span> {
         <span class="ident">header</span>: <span class="ident">Header</span> {
             <span class="ident">author</span>: <span class="ident">origin</span>,
@@ -1437,13 +1543,35 @@
     (<span class="ident">certificate</span>.<span class="ident">digest</span>(), <span class="ident">certificate</span>)
 }
 
+<span class="comment">// Creates an unsigned certificate from its given round, epoch, origin, and parents,</span>
+<span class="comment">// Note: the certificate is unsigned</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mock_certificate_with_epoch</span>(
+    <span class="ident">origin</span>: <span class="ident">PublicKey</span>,
+    <span class="ident">round</span>: <span class="ident">Round</span>,
+    <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
+    <span class="ident">parents</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
+) -&gt; (<span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span>) {
+    <span class="kw">let</span> <span class="ident">certificate</span> <span class="op">=</span> <span class="ident">Certificate</span> {
+        <span class="ident">header</span>: <span class="ident">Header</span> {
+            <span class="ident">author</span>: <span class="ident">origin</span>,
+            <span class="ident">round</span>,
+            <span class="ident">epoch</span>,
+            <span class="ident">parents</span>,
+            <span class="ident">payload</span>: <span class="ident">fixture_payload</span>(<span class="number">1</span>),
+            ..<span class="ident">Header::default</span>()
+        },
+        ..<span class="ident">Certificate::default</span>()
+    };
+    (<span class="ident">certificate</span>.<span class="ident">digest</span>(), <span class="ident">certificate</span>)
+}
+
 <span class="comment">// Creates one signed certificate from a set of signers - the signers must include the origin</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mock_signed_certificate</span>(
-    <span class="ident">signers</span>: <span class="kw-2">&amp;</span>[<span class="ident">Ed25519KeyPair</span>],
-    <span class="ident">origin</span>: <span class="ident">Ed25519PublicKey</span>,
+    <span class="ident">signers</span>: <span class="kw-2">&amp;</span>[<span class="ident">KeyPair</span>],
+    <span class="ident">origin</span>: <span class="ident">PublicKey</span>,
     <span class="ident">round</span>: <span class="ident">Round</span>,
     <span class="ident">parents</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">CertificateDigest</span><span class="op">&gt;</span>,
-) -&gt; (<span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span><span class="op">&lt;</span><span class="ident">Ed25519PublicKey</span><span class="op">&gt;</span>) {
+) -&gt; (<span class="ident">CertificateDigest</span>, <span class="ident">Certificate</span>) {
     <span class="kw">let</span> <span class="ident">author</span> <span class="op">=</span> <span class="ident">signers</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">kp</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">kp</span>.<span class="ident">public</span>() <span class="op">==</span> <span class="ident">origin</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">header_builder</span> <span class="op">=</span> <span class="ident">HeaderBuilder::default</span>()
         .<span class="ident">author</span>(<span class="ident">origin</span>.<span class="ident">clone</span>())
@@ -1467,5 +1595,5 @@
     (<span class="ident">cert</span>.<span class="ident">digest</span>(), <span class="ident">cert</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="test_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (27eb6d701 2022-07-04)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="test_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2643b1646 2022-07-27)" ></div>
 </body></html>

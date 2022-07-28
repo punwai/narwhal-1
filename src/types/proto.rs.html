@@ -145,9 +145,11 @@
 <span id="139">139</span>
 <span id="140">140</span>
 <span id="141">141</span>
+<span id="142">142</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">beta</span>, <span class="ident">allow</span>(<span class="ident">clippy::derive_partial_eq_without_eq</span>))]</span>
 <span class="attribute">#[<span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;generated/narwhal.rs&quot;</span>]</span>
 <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
 <span class="kw">mod</span> <span class="ident">narwhal</span>;
@@ -158,7 +160,7 @@
     <span class="ident">Batch</span>, <span class="ident">BatchDigest</span>, <span class="ident">BatchMessage</span>, <span class="ident">BlockError</span>, <span class="ident">BlockErrorKind</span>, <span class="ident">CertificateDigest</span>, <span class="ident">Transaction</span>,
 };
 <span class="kw">use</span> <span class="ident">bytes</span>::{<span class="ident">Buf</span>, <span class="ident">Bytes</span>};
-<span class="kw">use</span> <span class="ident">crypto::traits::VerifyingKey</span>;
+<span class="kw">use</span> <span class="ident">crypto::PublicKey</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">narwhal</span>::{
     <span class="ident">collection_retrieval_result::RetrievalResult</span>,
@@ -187,7 +189,7 @@
     <span class="ident">RoundsRequest</span>, <span class="ident">RoundsResponse</span>, <span class="ident">Transaction</span> <span class="kw">as</span> <span class="ident">TransactionProto</span>, <span class="ident">ValidatorData</span>,
 };
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">PublicKey</span>: <span class="ident">VerifyingKey</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PublicKeyProto</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PublicKeyProto</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pub_key</span>: <span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">PublicKeyProto</span> {
             <span class="ident">bytes</span>: <span class="ident">Bytes::from</span>(<span class="ident">pub_key</span>.<span class="ident">as_ref</span>().<span class="ident">to_vec</span>()),
@@ -287,5 +289,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="types" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (27eb6d701 2022-07-04)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="types" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2643b1646 2022-07-27)" ></div>
 </body></html>
