@@ -71,23 +71,12 @@
 <span id="71">71</span>
 <span id="72">72</span>
 <span id="73">73</span>
-<span id="74">74</span>
-<span id="75">75</span>
-<span id="76">76</span>
-<span id="77">77</span>
-<span id="78">78</span>
-<span id="79">79</span>
-<span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 <span class="kw">use</span> <span class="ident">config::WorkerId</span>;
 <span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
 <span class="kw">use</span> <span class="ident">store::StoreError</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
-<span class="kw">use</span> <span class="ident">types::SequenceNumber</span>;
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">bail</span> {
@@ -114,12 +103,6 @@
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Consensus referenced unexpected worker id {0}&quot;</span>)]</span>
     <span class="ident">UnexpectedWorkerId</span>(<span class="ident">WorkerId</span>),
-
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unexpected consensus index number {0}&quot;</span>)]</span>
-    <span class="ident">UnexpectedConsensusIndex</span>(<span class="ident">SequenceNumber</span>),
-
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The client-consensus connection dropped&quot;</span>)]</span>
-    <span class="ident">ConsensusConnectionDropped</span>,
 
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Connection with the transaction executor dropped&quot;</span>)]</span>
     <span class="ident">ExecutorConnectionDropped</span>,
@@ -148,12 +131,9 @@
 
 <span class="doccomment">/// Trait do separate execution errors in two categories: (i) errors caused by a bad client, (ii)</span>
 <span class="doccomment">/// errors caused by a fault in the authority.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ExecutionStateError</span>: <span class="ident">Debug</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ExecutionStateError</span>: <span class="ident">std::error::Error</span> {
     <span class="doccomment">/// Whether the error is due to a fault in the authority (eg. internal storage error).</span>
     <span class="kw">fn</span> <span class="ident">node_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span>;
-
-    <span class="doccomment">/// Convert the error message in to a string.</span>
-    <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">ExecutionStateError</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SubscriberError</span> {
@@ -165,4 +145,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="executor" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (4493a0f47 2022-08-02)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="executor" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (f03ce3096 2022-08-08)" ></div></body></html>
