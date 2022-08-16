@@ -113,120 +113,238 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.</span>
-<span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors</span>::{<span class="ident">SubscriberError</span>, <span class="ident">SubscriberResult</span>};
-<span class="kw">use</span> <span class="ident">consensus::ConsensusOutput</span>;
-<span class="kw">use</span> <span class="ident">futures</span>::{
-    <span class="ident">future::try_join_all</span>,
-    <span class="ident">stream</span>::{<span class="ident">FuturesOrdered</span>, <span class="ident">StreamExt</span>},
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+</span><span class="kw">use crate</span>::{errors::SubscriberResult, SubscriberError, SubscriberError::PayloadRetrieveError};
+<span class="kw">use </span>backoff::{Error, ExponentialBackoff};
+<span class="kw">use </span>consensus::ConsensusOutput;
+<span class="kw">use </span>crypto::Hash;
+<span class="kw">use </span>futures::stream::{FuturesOrdered, StreamExt};
+<span class="kw">use </span>primary::BlockCommand;
+<span class="kw">use </span>std::time::Duration;
+<span class="kw">use </span>store::Store;
+<span class="kw">use </span>tokio::{
+    sync::{oneshot, watch},
+    task::JoinHandle,
 };
-<span class="kw">use</span> <span class="ident">store::Store</span>;
-<span class="kw">use</span> <span class="ident">tokio</span>::{<span class="ident">sync::watch</span>, <span class="ident">task::JoinHandle</span>};
-<span class="kw">use</span> <span class="ident">tracing::debug</span>;
-<span class="kw">use</span> <span class="ident">types</span>::{<span class="ident">metered_channel</span>, <span class="ident">BatchDigest</span>, <span class="ident">ReconfigureNotification</span>, <span class="ident">SerializedBatchMessage</span>};
+<span class="kw">use </span>tracing::{debug, error};
+<span class="kw">use </span>types::{metered_channel, Batch, BatchDigest, ReconfigureNotification};
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;tests/subscriber_tests.rs&quot;</span>]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">subscriber_tests</span>;
+<span class="attribute">#[cfg(test)]</span>
+<span class="attribute">#[path = <span class="string">&quot;tests/subscriber_tests.rs&quot;</span>]</span>
+<span class="kw">pub mod </span>subscriber_tests;
 
-<span class="doccomment">/// The `Subscriber` receives certificates sequenced by the consensus and waits until the</span>
-<span class="doccomment">/// `BatchLoader` downloaded all the transactions references by the certificates; it then</span>
-<span class="doccomment">/// forward the certificates to the Executor Core.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Subscriber</span> {
-    <span class="doccomment">/// The temporary storage holding all transactions&#39; data (that may be too big to hold in memory).</span>
-    <span class="ident">store</span>: <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">BatchDigest</span>, <span class="ident">SerializedBatchMessage</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Receive reconfiguration updates.</span>
-    <span class="ident">rx_reconfigure</span>: <span class="ident">watch::Receiver</span><span class="op">&lt;</span><span class="ident">ReconfigureNotification</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A channel to receive consensus messages.</span>
-    <span class="ident">rx_consensus</span>: <span class="ident">metered_channel::Receiver</span><span class="op">&lt;</span><span class="ident">ConsensusOutput</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A channel to the batch loader to download transaction&#39;s data.</span>
-    <span class="ident">tx_batch_loader</span>: <span class="ident">metered_channel::Sender</span><span class="op">&lt;</span><span class="ident">ConsensusOutput</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A channel to send the complete and ordered list of consensus outputs to the executor. This</span>
-    <span class="doccomment">/// channel is used once all transactions data are downloaded.</span>
-    <span class="ident">tx_executor</span>: <span class="ident">metered_channel::Sender</span><span class="op">&lt;</span><span class="ident">ConsensusOutput</span><span class="op">&gt;</span>,
+<span class="doccomment">/// The `Subscriber` receives certificates sequenced by the consensus and waits until the
+/// downloaded all the transactions references by the certificates; it then
+/// forward the certificates to the Executor Core.
+</span><span class="kw">pub struct </span>Subscriber {
+    <span class="doccomment">/// The temporary storage holding all transactions&#39; data (that may be too big to hold in memory).
+    </span>store: Store&lt;BatchDigest, Batch&gt;,
+    <span class="doccomment">/// Receive reconfiguration updates.
+    </span>rx_reconfigure: watch::Receiver&lt;ReconfigureNotification&gt;,
+    <span class="doccomment">/// A channel to receive consensus messages.
+    </span>rx_consensus: metered_channel::Receiver&lt;ConsensusOutput&gt;,
+    <span class="doccomment">/// A channel to send the complete and ordered list of consensus outputs to the executor. This
+    /// channel is used once all transactions data are downloaded.
+    </span>tx_executor: metered_channel::Sender&lt;ConsensusOutput&gt;,
+    <span class="comment">// A channel to send commands to the block waiter to receive
+    // a certificate&#39;s batches (block).
+    </span>tx_get_block_commands: metered_channel::Sender&lt;BlockCommand&gt;,
+    <span class="comment">// When asking for a certificate&#39;s payload we want to retry until we succeed, unless
+    // some irrecoverable error occurs. For that reason a backoff policy is defined
+    </span>get_block_retry_policy: ExponentialBackoff,
 }
 
-<span class="kw">impl</span> <span class="ident">Subscriber</span> {
-    <span class="doccomment">/// Spawn a new subscriber in a new tokio task.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn</span>(
-        <span class="ident">store</span>: <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">BatchDigest</span>, <span class="ident">SerializedBatchMessage</span><span class="op">&gt;</span>,
-        <span class="ident">rx_reconfigure</span>: <span class="ident">watch::Receiver</span><span class="op">&lt;</span><span class="ident">ReconfigureNotification</span><span class="op">&gt;</span>,
-        <span class="ident">rx_consensus</span>: <span class="ident">metered_channel::Receiver</span><span class="op">&lt;</span><span class="ident">ConsensusOutput</span><span class="op">&gt;</span>,
-        <span class="ident">tx_batch_loader</span>: <span class="ident">metered_channel::Sender</span><span class="op">&lt;</span><span class="ident">ConsensusOutput</span><span class="op">&gt;</span>,
-        <span class="ident">tx_executor</span>: <span class="ident">metered_channel::Sender</span><span class="op">&lt;</span><span class="ident">ConsensusOutput</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="self">Self</span> {
-                <span class="ident">store</span>,
-                <span class="ident">rx_reconfigure</span>,
-                <span class="ident">rx_consensus</span>,
-                <span class="ident">tx_batch_loader</span>,
-                <span class="ident">tx_executor</span>,
+<span class="kw">impl </span>Subscriber {
+    <span class="doccomment">/// Spawn a new subscriber in a new tokio task.
+    </span><span class="attribute">#[must_use]</span>
+    <span class="kw">pub fn </span>spawn(
+        store: Store&lt;BatchDigest, Batch&gt;,
+        tx_get_block_commands: metered_channel::Sender&lt;BlockCommand&gt;,
+        rx_reconfigure: watch::Receiver&lt;ReconfigureNotification&gt;,
+        rx_consensus: metered_channel::Receiver&lt;ConsensusOutput&gt;,
+        tx_executor: metered_channel::Sender&lt;ConsensusOutput&gt;,
+    ) -&gt; JoinHandle&lt;()&gt; {
+        <span class="kw">let </span>get_block_retry_policy = ExponentialBackoff {
+            initial_interval: Duration::from_millis(<span class="number">500</span>),
+            randomization_factor: backoff::default::RANDOMIZATION_FACTOR,
+            multiplier: backoff::default::MULTIPLIER,
+            max_interval: Duration::from_secs(<span class="number">10</span>), <span class="comment">// Maximum backoff is 10 seconds
+            </span>max_elapsed_time: <span class="prelude-val">None</span>, <span class="comment">// Never end retrying unless a non recoverable error occurs.
+            </span>..Default::default()
+        };
+
+        tokio::spawn(<span class="kw">async move </span>{
+            <span class="self">Self </span>{
+                store,
+                rx_reconfigure,
+                rx_consensus,
+                tx_executor,
+                tx_get_block_commands,
+                get_block_retry_policy,
             }
-            .<span class="ident">run</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;Failed to run subscriber&quot;</span>)
+            .run()
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;Failed to run subscriber&quot;</span>)
         })
     }
 
-    <span class="doccomment">/// Wait for particular data to become available in the storage and then returns.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">waiter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">missing</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BatchDigest</span><span class="op">&gt;</span>,
-        <span class="ident">store</span>: <span class="ident">Store</span><span class="op">&lt;</span><span class="ident">BatchDigest</span>, <span class="ident">SerializedBatchMessage</span><span class="op">&gt;</span>,
-        <span class="ident">deliver</span>: <span class="ident">T</span>,
-    ) -&gt; <span class="ident">SubscriberResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">waiting</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">missing</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">store</span>.<span class="ident">notify_read</span>(<span class="ident">x</span>)).<span class="ident">collect</span>();
-        <span class="ident">try_join_all</span>(<span class="ident">waiting</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">deliver</span>)
-            .<span class="ident">map_err</span>(<span class="ident">SubscriberError::from</span>)
-    }
+    <span class="doccomment">/// Main loop connecting to the consensus to listen to sequence messages.
+    </span><span class="kw">async fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; SubscriberResult&lt;()&gt; {
+        <span class="comment">// It&#39;s important to have the futures in ordered fashion as we want
+        // to guarantee that will deliver to the executor the certificates
+        // in the same order we received from rx_consensus. So it doesn&#39;t
+        // mater if we somehow managed to fetch the batches from a later
+        // certificate. Unless the earlier certificate&#39;s payload has been
+        // fetched, no later certificate will be delivered.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>waiting = FuturesOrdered::new();
 
-    <span class="doccomment">/// Main loop connecting to the consensus to listen to sequence messages.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">SubscriberResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">waiting</span> <span class="op">=</span> <span class="ident">FuturesOrdered::new</span>();
-
-        <span class="comment">// Listen to sequenced consensus message and process them.</span>
-        <span class="kw">loop</span> {
+        <span class="comment">// Listen to sequenced consensus message and process them.
+        </span><span class="kw">loop </span>{
             <span class="macro">tokio::select!</span> {
-                <span class="comment">// Receive the ordered sequence of consensus messages from a consensus node.</span>
-                <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">rx_consensus</span>.<span class="ident">recv</span>() =&gt; {
-                    <span class="comment">// Send the certificate to the batch loader to download all transactions&#39; data.</span>
-                    <span class="self">self</span>.<span class="ident">tx_batch_loader</span>
-                        .<span class="ident">send</span>(<span class="ident">message</span>.<span class="ident">clone</span>())
-                        .<span class="kw">await</span>
-                        .<span class="ident">expect</span>(<span class="string">&quot;Failed to send message ot batch loader&quot;</span>);
-
-                    <span class="comment">// Wait for the transaction data to be available in the store. This will happen for sure because</span>
-                    <span class="comment">// the primary already successfully processed the certificate. This implies that the primary notified</span>
-                    <span class="comment">// its worker to download any missing batch. We may however have to wait for these batch be available</span>
-                    <span class="comment">// on our workers. Once all batches are available, we forward the certificate o the Executor Core.</span>
-                    <span class="kw">let</span> <span class="ident">digests</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">certificate</span>.<span class="ident">header</span>.<span class="ident">payload</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
-                    <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::waiter</span>(<span class="ident">digests</span>, <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">clone</span>(), <span class="ident">message</span>);
-                    <span class="ident">waiting</span>.<span class="ident">push</span>(<span class="ident">future</span>);
+                <span class="comment">// Receive the ordered sequence of consensus messages from a consensus node.
+                </span><span class="prelude-val">Some</span>(message) = <span class="self">self</span>.rx_consensus.recv() =&gt; {
+                    <span class="comment">// Fetch the certificate&#39;s payload from the workers. This is done via the
+                    // block_waiter component. If the batches are not available in the workers then
+                    // block_waiter will do its best to sync from the other peers. Once all batches
+                    // are available, we forward the certificate o the Executor Core.
+                    </span><span class="kw">let </span>future = <span class="self">Self</span>::wait_on_payload(
+                        <span class="self">self</span>.get_block_retry_policy.clone(),
+                        <span class="self">self</span>.store.clone(),
+                        <span class="self">self</span>.tx_get_block_commands.clone(),
+                        message);
+                    waiting.push_back(future);
                 },
 
-                <span class="comment">// Receive here consensus messages for which we have downloaded all transactions data.</span>
-                <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">waiting</span>.<span class="ident">next</span>() =&gt; {
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">tx_executor</span>.<span class="ident">send</span>(<span class="ident">message</span><span class="question-mark">?</span>).<span class="kw">await</span>.<span class="ident">is_err</span>() {
+                <span class="comment">// Receive here consensus messages for which we have downloaded all transactions data.
+                </span><span class="prelude-val">Some</span>(message) = waiting.next() =&gt; {
+                    <span class="kw">if </span><span class="self">self</span>.tx_executor.send(message<span class="question-mark">?</span>).<span class="kw">await</span>.is_err() {
                         <span class="macro">debug!</span>(<span class="string">&quot;Executor core is shutting down&quot;</span>);
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                     }
                 },
 
-                <span class="comment">// Check whether the committee changed.</span>
-                <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rx_reconfigure</span>.<span class="ident">changed</span>() =&gt; {
-                    <span class="ident">result</span>.<span class="ident">expect</span>(<span class="string">&quot;Committee channel dropped&quot;</span>);
-                    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rx_reconfigure</span>.<span class="ident">borrow</span>().<span class="ident">clone</span>();
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ReconfigureNotification::Shutdown</span> <span class="op">=</span> <span class="ident">message</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+                <span class="comment">// Check whether the committee changed.
+                </span>result = <span class="self">self</span>.rx_reconfigure.changed() =&gt; {
+                    result.expect(<span class="string">&quot;Committee channel dropped&quot;</span>);
+                    <span class="kw">let </span>message = <span class="self">self</span>.rx_reconfigure.borrow().clone();
+                    <span class="kw">if let </span>ReconfigureNotification::Shutdown = message {
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                     }
                 }
             }
         }
     }
+
+    <span class="doccomment">/// The wait_on_payload will try to retrieve the certificate&#39;s payload
+    /// from the workers via the block_waiter component and relase the
+    /// `deliver` once successfully done. Since we want the output to be
+    /// sequenced we will not quit this method until we have successfully
+    /// fetched the payload.
+    </span><span class="kw">async fn </span>wait_on_payload(
+        back_off_policy: ExponentialBackoff,
+        store: Store&lt;BatchDigest, Batch&gt;,
+        tx_get_block_commands: metered_channel::Sender&lt;BlockCommand&gt;,
+        deliver: ConsensusOutput,
+    ) -&gt; SubscriberResult&lt;ConsensusOutput&gt; {
+        <span class="kw">let </span>get_block = <span class="kw">move </span>|| {
+            <span class="kw">let </span>message = deliver.clone();
+            <span class="kw">let </span>id = message.certificate.digest();
+            <span class="kw">let </span>tx_get_block = tx_get_block_commands.clone();
+            <span class="kw">let </span>batch_store = store.clone();
+
+            <span class="kw">async move </span>{
+                <span class="kw">let </span>(sender, receiver) = oneshot::channel();
+
+                tx_get_block
+                    .send(BlockCommand::GetBlock { id, sender })
+                    .<span class="kw">await
+                    </span>.map_err(|err| Error::permanent(PayloadRetrieveError(id, err.to_string())))<span class="question-mark">?</span>;
+
+                <span class="kw">match </span>receiver
+                    .<span class="kw">await
+                    </span>.map_err(|err| Error::permanent(PayloadRetrieveError(id, err.to_string())))<span class="question-mark">?
+                </span>{
+                    <span class="prelude-val">Ok</span>(block) =&gt; {
+                        <span class="comment">// we successfully received the payload. Now let&#39;s add to store
+                        </span>batch_store
+                            .write_all(block.batches.into_iter().map(|b| (b.id, b.transactions)))
+                            .<span class="kw">await
+                            </span>.map_err(|err| Error::permanent(SubscriberError::from(err)))<span class="question-mark">?</span>;
+
+                        <span class="prelude-val">Ok</span>(message)
+                    }
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="comment">// whatever the error might be at this point we don&#39;t
+                        // have many options apart from retrying.
+                        </span><span class="macro">error!</span>(<span class="string">&quot;Error while retrieving block via block waiter: {}&quot;</span>, err);
+                        <span class="prelude-val">Err</span>(Error::transient(PayloadRetrieveError(id, err.to_string())))
+                    }
+                }
+            }
+        };
+
+        backoff::future::retry(back_off_policy, get_block).<span class="kw">await
+    </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="executor" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (f03ce3096 2022-08-08)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="executor" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (40336865f 2022-08-15)" ></div></body></html>
