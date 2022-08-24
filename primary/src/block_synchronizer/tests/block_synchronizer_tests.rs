@@ -750,7 +750,7 @@ async fn test_reply_with_payload_already_in_storage() {
                 .write(certificate.digest(), certificate.clone())
                 .await;
 
-            for entry in certificate.header.payload {
+            for entry in certificate.header().payload.iter().map(|(&a, &b)| (a, b)) {
                 payload_store.write(entry, 1).await;
             }
         }

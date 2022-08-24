@@ -238,7 +238,7 @@ async fn test_process_payload_availability_success() {
             // write the certificate
             certificate_store.write(id, certificate.clone()).await;
 
-            for payload in certificate.header.payload {
+            for payload in certificate.header().payload.iter().map(|(&a, &b)| (a, b)) {
                 payload_store.write(payload, 1).await;
             }
         } else {

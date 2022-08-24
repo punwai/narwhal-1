@@ -1,14 +1,13 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use indexmap::IndexMap;
 use prometheus::Registry;
 use std::collections::BTreeSet;
 
 use dag::node_dag::NodeDagError;
 use fastcrypto::{traits::KeyPair, Hash};
 use std::sync::Arc;
-use test_utils::make_optimal_certificates;
+use test_utils::{make_empty_certificates, make_optimal_certificates};
 use types::Certificate;
 
 use crate::metrics::ConsensusMetrics;
@@ -148,12 +147,7 @@ async fn test_dag_compresses_empty_blocks() {
     let (_, dag) = Dag::new(&committee, rx_cert, metrics);
 
     // insert one round of empty certificates
-    let (mut certificates, next_parents) =
-        make_optimal_certificates(1..=1, &genesis.clone(), &keys);
-    // make those empty
-    for mut cert in certificates.iter_mut() {
-        cert.header.payload = IndexMap::new();
-    }
+    let (certificates, next_parents) = make_empty_certificates(1..=1, &genesis.clone(), &keys, 0.0);
 
     // Feed the certificates to the Dag
     let mut certs_to_insert = certificates.clone();
@@ -216,12 +210,7 @@ async fn test_dag_rounds_after_compression() {
     let (_, dag) = Dag::new(&committee, rx_cert, metrics);
 
     // insert one round of empty certificates
-    let (mut certificates, next_parents) =
-        make_optimal_certificates(1..=1, &genesis.clone(), &keys);
-    // make those empty
-    for mut cert in certificates.iter_mut() {
-        cert.header.payload = IndexMap::new();
-    }
+    let (certificates, next_parents) = make_empty_certificates(1..=1, &genesis.clone(), &keys, 0.0);
 
     // Feed the certificates to the Dag
     let mut certs_to_insert = certificates.clone();

@@ -124,7 +124,7 @@ async fn process_certificate_missing_parents_in_reverse() {
     // Generate headers in successive rounds
     let mut current_round: Vec<_> = Certificate::genesis(&committee)
         .into_iter()
-        .map(|cert| cert.header)
+        .map(|cert| cert.header().clone())
         .collect();
     let mut headers = vec![];
     let rounds = 5;
@@ -271,7 +271,7 @@ async fn process_certificate_check_gc_fires() {
     // Generate headers in successive rounds
     let mut current_round: Vec<_> = Certificate::genesis(&committee)
         .into_iter()
-        .map(|cert| cert.header)
+        .map(|cert| cert.header().clone())
         .collect();
     let mut headers = vec![];
     let rounds = 5;

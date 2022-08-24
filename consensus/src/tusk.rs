@@ -69,7 +69,7 @@ impl ConsensusProtocol for Tusk {
             .get(&(r - 1))
             .expect("We should have the whole history by now")
             .values()
-            .filter(|(_, x)| x.header.parents.contains(leader_digest))
+            .filter(|(_, x)| x.header().parents.contains(leader_digest))
             .map(|(_, x)| self.committee.stake(&x.origin()))
             .sum();
 

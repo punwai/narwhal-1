@@ -129,14 +129,14 @@ impl CertificateWaiter {
                     }
 
                     // Ensure we process only once this certificate.
-                    let header_id = certificate.header.id;
+                    let header_id = certificate.header().id;
                     if self.pending.contains_key(&header_id) {
                         continue;
                     }
 
                     // Add the certificate to the waiter pool. The waiter will return it to us when
                     // all its parents are in the store.
-                    let wait_for = certificate.header.parents.iter().cloned().collect();
+                    let wait_for = certificate.header().parents.iter().cloned().collect();
                     let (tx_cancel, rx_cancel) = oneshot::channel();
                     // TODO: remove all this once drain_filter is stabilized.
                     let once_cancel = {

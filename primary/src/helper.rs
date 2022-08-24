@@ -180,7 +180,7 @@ impl Helper {
             if let Some(certificate) = certificate_option {
                 let payload_available = match self
                     .payload_store
-                    .read_all(certificate.header.payload)
+                    .read_all(certificate.header().payload.clone())
                     .await
                 {
                     Ok(payload_result) => payload_result.into_iter().all(|x| x.is_some()),

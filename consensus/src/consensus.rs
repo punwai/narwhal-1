@@ -101,21 +101,21 @@ impl ConsensusState {
         let min_round = last_committed_round.saturating_sub(gc_depth);
         let cert_map = cert_store
             .iter(Some(Box::new(move |(_dig, cert)| {
-                cert.header.round > min_round
+                cert.header().round > min_round
             })))
             .await;
 
         let num_certs = cert_map.len();
         for (digest, cert) in cert_map {
-            let inner = dag.get_mut(&cert.header.round);
+            let inner = dag.get_mut(&cert.header().round);
             match inner {
                 Some(m) => {
-                    m.insert(cert.header.author.clone(), (digest, cert.clone()));
+                    m.insert(cert.header().author.clone(), (digest, cert.clone()));
                 }
                 None => {
-                    dag.entry(cert.header.round)
+                    dag.entry(cert.header().round)
                         .or_insert_with(HashMap::new)
-                        .insert(cert.header.author.clone(), (digest, cert.clone()));
+                        .insert(cert.header().author.clone(), (digest, cert.clone()));
                 }
             }
         }
@@ -305,13 +305,13 @@ where
                         let certificate = &output.certificate;
                         #[cfg(not(feature = "benchmark"))]
                         if output.consensus_index % 5_000 == 0 {
-                            tracing::debug!("Committed {}", certificate.header);
+                            tracing::debug!("Committed {}", certificate.header());
                         }
 
                         #[cfg(feature = "benchmark")]
-                        for digest in certificate.header.payload.keys() {
+                        for digest in certificate.header().payload.keys() {
                             // NOTE: This log entry is used to compute performance.
-                            tracing::info!("Committed {} -> {:?}", certificate.header, digest);
+                            tracing::info!("Committed {} -> {:?}", certificate.header(), digest);
                         }
 
                         self.tx_primary

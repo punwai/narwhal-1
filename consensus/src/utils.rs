@@ -46,7 +46,7 @@ fn linked(leader: &Certificate, prev_leader: &Certificate, dag: &Dag) -> bool {
             .get(&(r))
             .expect("We should have the whole history by now")
             .values()
-            .filter(|(digest, _)| parents.iter().any(|x| x.header.parents.contains(digest)))
+            .filter(|(digest, _)| parents.iter().any(|x| x.header().parents.contains(digest)))
             .map(|(_, certificate)| certificate)
             .collect();
     }
@@ -68,7 +68,7 @@ pub fn order_dag(
     while let Some(x) = buffer.pop() {
         debug!("Sequencing {:?}", x);
         ordered.push(x.clone());
-        for parent in &x.header.parents {
+        for parent in &x.header().parents {
             let (digest, certificate) = match state
                 .dag
                 .get(&(x.round() - 1))

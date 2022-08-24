@@ -73,10 +73,12 @@ fn get_registry() -> Result<Registry> {
         signature: kp.sign(Digest::from(header_digest).as_ref()),
         ..header
     };
-    let certificate = Certificate {
-        header: header.clone(),
-        votes: vec![(pk.clone(), signature.clone())],
-    };
+    let certificate = Certificate::new(
+        &committee,
+        header.clone(),
+        vec![(pk.clone(), signature.clone())],
+    )
+    .unwrap();
 
     tracer.trace_value(&mut samples, &header)?;
     tracer.trace_value(&mut samples, &certificate)?;

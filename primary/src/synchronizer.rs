@@ -146,7 +146,7 @@ impl Synchronizer {
     /// certificate to the `CertificateWaiter` which will trigger re-processing once we have
     /// all the missing data.
     pub async fn deliver_certificate(&mut self, certificate: &Certificate) -> DagResult<bool> {
-        for digest in &certificate.header.parents {
+        for digest in &certificate.header().parents {
             if self.genesis.iter().any(|(x, _)| x == digest) {
                 continue;
             }

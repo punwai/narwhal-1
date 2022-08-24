@@ -608,7 +608,7 @@ impl<SynchronizerHandler: Handler + Send + Sync + 'static> BlockWaiter<Synchroni
 
         // Add on a vector the receivers
         let batch_receivers = self
-            .send_batch_requests(id, certificate.header.clone())
+            .send_batch_requests(id, certificate.header().clone())
             .await;
 
         let fut = Self::wait_for_all_batches(id, batch_receivers);
@@ -688,17 +688,17 @@ impl<SynchronizerHandler: Handler + Send + Sync + 'static> BlockWaiter<Synchroni
         // unlock the pending request & batches.
         match self.pending_get_block.remove(&block_id) {
             Some(certificate) => {
-                for (digest, _) in certificate.header.payload {
+                for (digest, _) in certificate.header().payload.iter() {
                     // Although we expect the entries to have been cleaned up by the moment
                     // they have been delivered (or error) still adding this here to ensure
                     // we don't miss any edge case and introduce memory leaks.
-                    if let Some(senders) = self.tx_pending_batch.get_mut(&digest) {
+                    if let Some(senders) = self.tx_pending_batch.get_mut(digest) {
                         senders.remove(&block_id);
 
                         // if no more senders in the map then remove entirely
                         // the map for the digest
                         if senders.is_empty() {
-                            self.tx_pending_batch.remove(&digest);
+                            self.tx_pending_batch.remove(digest);
                         }
                     }
                 }

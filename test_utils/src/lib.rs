@@ -479,13 +479,11 @@ pub fn votes(header: &Header) -> Vec<Vote> {
 
 // Fixture
 pub fn certificate(header: &Header) -> Certificate {
-    Certificate {
-        header: header.clone(),
-        votes: votes(header)
-            .into_iter()
-            .map(|x| (x.author, x.signature))
-            .collect(),
-    }
+    let votes: Vec<_> = votes(header)
+        .into_iter()
+        .map(|x| (x.author, x.signature))
+        .collect();
+    Certificate::new(&committee(None), header.clone(), votes).unwrap()
 }
 
 pub struct PrimaryToPrimaryMockServer {
@@ -800,6 +798,21 @@ pub fn make_certificates(
     )
 }
 
+pub fn make_empty_certificates(
+    range: RangeInclusive<Round>,
+    initial_parents: &BTreeSet<CertificateDigest>,
+    keys: &[PublicKey],
+    failure_probability: f64,
+) -> (VecDeque<Certificate>, BTreeSet<CertificateDigest>) {
+    rounds_of_certificates(
+        range,
+        initial_parents,
+        keys,
+        failure_probability,
+        mock_empty_certificate,
+    )
+}
+
 // make rounds worth of unsigned certificates with the sampled number of parents
 pub fn make_certificates_with_epoch(
     range: RangeInclusive<Round>,
@@ -850,16 +863,39 @@ pub fn mock_certificate(
     round: Round,
     parents: BTreeSet<CertificateDigest>,
 ) -> (CertificateDigest, Certificate) {
-    let certificate = Certificate {
-        header: Header {
+    let certificate = Certificate::new(
+        &committee(None),
+        Header {
             author: origin,
             round,
             parents,
             payload: fixture_payload(1),
             ..Header::default()
         },
-        ..Certificate::default()
-    };
+        Vec::new(),
+    )
+    .unwrap();
+    (certificate.digest(), certificate)
+}
+
+// Creates an unsigned certificate with an empty certificate from its given round, origin and parents,
+pub fn mock_empty_certificate(
+    origin: PublicKey,
+    round: Round,
+    parents: BTreeSet<CertificateDigest>,
+) -> (CertificateDigest, Certificate) {
+    let certificate = Certificate::new(
+        &committee(None),
+        Header {
+            author: origin,
+            round,
+            parents,
+            payload: IndexMap::new(),
+            ..Header::default()
+        },
+        Vec::new(),
+    )
+    .unwrap();
     (certificate.digest(), certificate)
 }
 
@@ -871,8 +907,9 @@ pub fn mock_certificate_with_epoch(
     epoch: Epoch,
     parents: BTreeSet<CertificateDigest>,
 ) -> (CertificateDigest, Certificate) {
-    let certificate = Certificate {
-        header: Header {
+    let certificate = Certificate::new(
+        &committee(None),
+        Header {
             author: origin,
             round,
             epoch,
@@ -880,8 +917,9 @@ pub fn mock_certificate_with_epoch(
             payload: fixture_payload(1),
             ..Header::default()
         },
-        ..Certificate::default()
-    };
+        Vec::new(),
+    )
+    .unwrap();
     (certificate.digest(), certificate)
 }
 
@@ -899,18 +937,19 @@ pub fn mock_signed_certificate(
         .round(round)
         .epoch(0)
         .parents(parents);
-    let header = header_builder.build(author).unwrap();
-    let mut cert = Certificate {
-        header,
-        ..Certificate::default()
-    };
 
+    let header = header_builder.build(author).unwrap();
+
+    let cert = Certificate::new(&committee(None), header.clone(), Vec::new()).unwrap();
+
+    let mut votes = Vec::new();
     for signer in signers {
         let pk = signer.public();
         let sig = signer
             .try_sign(Digest::from(cert.digest()).as_ref())
             .unwrap();
-        cert.votes.push((pk.clone(), sig))
+        votes.push((pk.clone(), sig))
     }
+    let cert = Certificate::new(&committee(None), header, votes).unwrap();
     (cert.digest(), cert)
 }

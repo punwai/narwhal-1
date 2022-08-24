@@ -372,11 +372,11 @@ impl Core {
         // processing of the certificate even if we don't have them in store right now.
         if !self
             .processing
-            .get(&certificate.header.round)
-            .map_or_else(|| false, |x| x.contains(&certificate.header.id))
+            .get(&certificate.header().round)
+            .map_or_else(|| false, |x| x.contains(&certificate.header().id))
         {
             // This function may still throw an error if the storage fails.
-            self.process_header(&certificate.header).await?;
+            self.process_header(certificate.header()).await?;
         }
 
         // Ensure we have all the ancestors of this certificate yet (if we didn't already garbage collect them).
@@ -400,7 +400,7 @@ impl Core {
             .write(certificate.digest(), certificate.clone())
             .await;
 
-        let certificate_source = if self.name.eq(&certificate.header.author) {
+        let certificate_source = if self.name.eq(&certificate.header().author) {
             "own"
         } else {
             "other"
@@ -435,7 +435,7 @@ impl Core {
         }
 
         // Send it to the consensus layer.
-        let id = certificate.header.id;
+        let id = certificate.header().id;
         if let Err(e) = self.tx_consensus.send(certificate).await {
             warn!(
                 "Failed to deliver certificate {} to the consensus: {}",

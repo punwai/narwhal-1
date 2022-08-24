@@ -234,7 +234,13 @@ async fn test_synchronize_block_payload() {
 
     // AND a certificate with payload already available
     let cert_stored: Certificate = certificate(&fixture_header_with_payload(1));
-    for e in cert_stored.clone().header.payload {
+    for e in cert_stored
+        .clone()
+        .header()
+        .payload
+        .iter()
+        .map(|(&a, &b)| (a, b))
+    {
         payload_store.write(e, 1).await;
     }
 

@@ -108,7 +108,7 @@ where
         // Collect all transactions in all the batches.
         let mut batches = Vec::new();
 
-        for batch_digest in message.certificate.header.payload.keys() {
+        for batch_digest in message.certificate.header().payload.keys() {
             batches.push(self.collect_batch(batch_digest).await?);
         }
 

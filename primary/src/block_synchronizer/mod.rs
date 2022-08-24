@@ -576,9 +576,9 @@ impl BlockSynchronizer {
 
         for certificate in certificates {
             let payload: Vec<(BatchDigest, WorkerId)> =
-                certificate.header.payload.clone().into_iter().collect();
+                certificate.header().payload.clone().into_iter().collect();
 
-            let payload_available = if certificate.header.author == self.name {
+            let payload_available = if certificate.header().author == self.name {
                 trace!(
                     "Certificate with id {} is our own, no need to check in storage.",
                     certificate.digest()
@@ -723,7 +723,7 @@ impl BlockSynchronizer {
         certificate: Certificate,
     ) -> State {
         let futures = certificate
-            .header
+            .header()
             .payload
             .iter()
             .map(|(batch_digest, worker_id)| payload_store.notify_read((*batch_digest, *worker_id)))
