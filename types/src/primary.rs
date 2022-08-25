@@ -393,21 +393,33 @@ impl Certificate {
     ) -> DagResult<Certificate> {
         let mut votes = votes;
         votes.sort_by_key(|(pk, _)| pk.clone());
+
+        let mut votes_iter = 0;
+        let votes_len = votes.len();
+        let keys = committee.keys();
+        let filtered_votes = keys
+            .iter()
+            .enumerate()
+            .filter(|(_, &pk)| {
+                if votes_iter < votes_len && pk == &votes[votes_iter].0 {
+                    votes_iter += 1;
+                    return true;
+                }
+                false
+            })
+            .map(|(index, _)| index as u32);
+        let bitmap = roaring::RoaringBitmap::from_sorted_iter(filtered_votes)
+            .map_err(|_| DagError::UnknownAuthority("".to_string()))?;
+
+        // If some of the votes is not found in the committee, reject.
+        if votes_iter != votes_len {
+            return Err(DagError::UnknownAuthority("".to_string()));
+        }
+
         let aggr_votes =
             AggregateSignature::aggregate(votes.iter().map(|(_, sig)| sig).cloned().collect())
                 .map_err(|_| DagError::UnknownAuthority("".to_string()))?;
-        let vec = votes
-            .iter()
-            .map(|(pk, _)| {
-                committee
-                    .get_authority_index(pk)
-                    .ok_or_else(|| DagError::UnknownAuthority("1".to_string()))
-                    .map(|x| x as u32)
-            })
-            .collect::<DagResult<Vec<_>>>()?
-            .into_iter();
-        let bitmap = roaring::RoaringBitmap::from_sorted_iter(vec)
-            .map_err(|_| DagError::UnknownAuthority("1".to_string()))?;
+
         Ok(Certificate {
             header,
             votes: aggr_votes,
@@ -436,28 +448,26 @@ impl Certificate {
         // Ensure the certificate has a quorum.
         let mut weight = 0;
 
-        let mut pks: Vec<PublicKey> = Vec::new();
+        let auth_indexes = self.bitmap.iter().collect::<Vec<_>>();
+        let auth_iter = 0;
+        let pks: Vec<_> = committee
+            .authorities()
+            .enumerate()
+            .filter(|(i, (_, auth))| match auth_indexes.get(auth_iter) {
+                Some(index) if *index == *i as u32 => {
+                    weight += auth.stake;
+                    true
+                }
+                _ => false,
+            })
+            .map(|(_, (pk, _))| pk.clone())
+            .collect();
 
-        for authority_index in self.bitmap.iter() {
-            let authority_public_key = committee
-                .get_authority_by_index(authority_index as u64)
-                .ok_or_else(|| {
-                    DagError::UnknownAuthority("Out of bounds Authority Bitmap".to_string())
-                })?;
-
-            pks.push(authority_public_key.clone());
-
-            let voting_rights = committee.stake(authority_public_key);
-            ensure!(
-                voting_rights > 0,
-                DagError::UnknownAuthority(authority_public_key.encode_base64())
-            );
-            weight += voting_rights;
-        }
         ensure!(
             weight >= committee.quorum_threshold(),
             DagError::CertificateRequiresQuorum
         );
+
         // Verify the signatures
         let certificate_digest: Digest = Digest::from(self.digest());
         self.votes
