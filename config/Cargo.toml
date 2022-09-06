@@ -9,12 +9,13 @@ edition = "2021"
 match_opt = "0.1.2"
 multiaddr = "0.14.0"
 serde = { version = "1.0.144", features = ["derive"] }
+serde_with = "2.0.0"
 serde_json = "1.0.85"
 thiserror = "1.0.33"
 tracing = "0.1.36"
 arc-swap = { version = "1.5.1", features = ["serde"] }
 
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae23ca7cc2778293fd3b1db42e8cd02d3b" }
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "f40b3022369e3f81d67d1241796568ec6e980b23" }
 crypto = { path = "../crypto" }
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
 rand = "0.8.5"

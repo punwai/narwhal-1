@@ -19,7 +19,7 @@ tokio = { version = "1.20.1", features = ["sync"] }
 tracing = "0.1.36"
 
 config = { path = "../config" }
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae23ca7cc2778293fd3b1db42e8cd02d3b" }
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "f40b3022369e3f81d67d1241796568ec6e980b23" }
 crypto = { path = "../crypto" }
 storage = { path = "../storage" }
 dag = { path = "../dag" }

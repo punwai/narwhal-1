@@ -122,6 +122,7 @@ async fn test_simple_epoch_change() {
     }
 }
 
+#[allow(clippy::mutable_key_type)]
 #[tokio::test]
 async fn test_partial_committee_change() {
     let parameters = Parameters {

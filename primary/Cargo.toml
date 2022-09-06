@@ -36,7 +36,7 @@ tracing = "0.1.36"
 tap = "1.0.1"
 
 consensus = { path = "../consensus" }
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae23ca7cc2778293fd3b1db42e8cd02d3b" }
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "f40b3022369e3f81d67d1241796568ec6e980b23" }
 crypto = { path = "../crypto" }
 network = { path = "../network" }
 types = { path = "../types" }
