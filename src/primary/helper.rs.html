@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primary/src/helper.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>helper.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../primary/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primary/src/helper.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>helper.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../primary/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -259,31 +259,14 @@
 <span id="259">259</span>
 <span id="260">260</span>
 <span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
-<span id="269">269</span>
-<span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 </span><span class="kw">use crate</span>::{primary::PrimaryMessage, PayloadToken};
 <span class="kw">use </span>config::{Committee, WorkerId};
-<span class="kw">use </span>crypto::{traits::EncodeDecodeBase64, PublicKey};
-<span class="kw">use </span>network::{PrimaryNetwork, UnreliableNetwork};
+<span class="kw">use </span>crypto::PublicKey;
+<span class="kw">use </span>network::{PrimaryNetwork, UnreliableNetwork2};
+<span class="kw">use </span>storage::CertificateStore;
 <span class="kw">use </span>store::{Store, StoreError};
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>tokio::{sync::watch, task::JoinHandle};
@@ -292,20 +275,17 @@
     metered_channel::Receiver, BatchDigest, Certificate, CertificateDigest, ReconfigureNotification,
 };
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="attribute">#[path = <span class="string">&quot;tests/helper_tests.rs&quot;</span>]</span>
-<span class="kw">mod </span>helper_tests;
+<span class="attribute">#[cfg(test)]
+#[path = <span class="string">&quot;tests/helper_tests.rs&quot;</span>]
+</span><span class="kw">mod </span>helper_tests;
 
-<span class="attribute">#[derive(Debug, Error)]</span>
-<span class="kw">enum </span>HelperError {
-    <span class="attribute">#[error(<span class="string">&quot;Received message from unknown authority {0}&quot;</span>)]</span>
-    UnknownAuthority(String),
+<span class="attribute">#[derive(Debug, Error)]
+</span><span class="kw">enum </span>HelperError {
+    <span class="attribute">#[error(<span class="string">&quot;Storage failure: {0}&quot;</span>)]
+    </span>StoreError(<span class="attribute">#[from] </span>StoreError),
 
-    <span class="attribute">#[error(<span class="string">&quot;Storage failure: {0}&quot;</span>)]</span>
-    StoreError(<span class="attribute">#[from]</span> StoreError),
-
-    <span class="attribute">#[error(<span class="string">&quot;Invalid request received: {0}&quot;</span>)]</span>
-    InvalidRequest(String),
+    <span class="attribute">#[error(<span class="string">&quot;Invalid request received: {0}&quot;</span>)]
+    </span>InvalidRequest(String),
 }
 
 <span class="doccomment">/// A task dedicated to help other authorities by replying to their certificate &amp;
@@ -316,7 +296,7 @@
     <span class="doccomment">/// The committee information.
     </span>committee: Committee,
     <span class="doccomment">/// The certificate persistent storage.
-    </span>certificate_store: Store&lt;CertificateDigest, Certificate&gt;,
+    </span>certificate_store: CertificateStore,
     <span class="doccomment">/// The payloads (batches) persistent storage.
     </span>payload_store: Store&lt;(BatchDigest, WorkerId), PayloadToken&gt;,
     <span class="doccomment">/// Watch channel to reconfigure the committee.
@@ -328,11 +308,11 @@
 }
 
 <span class="kw">impl </span>Helper {
-    <span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>spawn(
+    <span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>spawn(
         name: PublicKey,
         committee: Committee,
-        certificate_store: Store&lt;CertificateDigest, Certificate&gt;,
+        certificate_store: CertificateStore,
         payload_store: Store&lt;(BatchDigest, WorkerId), PayloadToken&gt;,
         rx_committee: watch::Receiver&lt;ReconfigureNotification&gt;,
         rx_primaries: Receiver&lt;PrimaryMessage&gt;,
@@ -359,7 +339,7 @@
             <span class="self">self</span>.name
         );
         <span class="kw">loop </span>{
-            <span class="macro">tokio::select!</span> {
+            <span class="macro">tokio::select! </span>{
                 <span class="prelude-val">Some</span>(request) = <span class="self">self</span>.rx_primaries.recv() =&gt; <span class="kw">match </span>request {
                     <span class="comment">// The CertificatesRequest will find any certificates that exist in
                     // the data source (dictated by the digests parameter). The results
@@ -417,23 +397,15 @@
     /// certificate &amp; batch data for each certificate digest in digests,
     /// and reports on each fully available item in the request in a
     /// PayloadAvailabilityResponse.
-    </span><span class="attribute">#[instrument(level=<span class="string">&quot;debug&quot;</span>, skip_all, fields(num_certificate_ids = digests.len()), err)]</span>
-    <span class="kw">async fn </span>process_payload_availability(
+    </span><span class="attribute">#[instrument(level=<span class="string">&quot;debug&quot;</span>, skip_all, fields(num_certificate_ids = digests.len()), err)]
+    </span><span class="kw">async fn </span>process_payload_availability(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         digests: Vec&lt;CertificateDigest&gt;,
         origin: PublicKey,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), HelperError&gt; {
-        <span class="comment">// get the requestor&#39;s address.
-        </span><span class="kw">let </span>address = <span class="kw">match </span><span class="self">self</span>.committee.primary(<span class="kw-2">&amp;</span>origin) {
-            <span class="prelude-val">Ok</span>(x) =&gt; x.primary_to_primary,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(HelperError::UnknownAuthority(origin.encode_base64()));
-            }
-        };
-
         <span class="kw">let </span><span class="kw-2">mut </span>result: Vec&lt;(CertificateDigest, bool)&gt; = Vec::new();
 
-        <span class="kw">let </span>certificates = <span class="kw">match </span><span class="self">self</span>.certificate_store.read_all(digests.to_owned()).<span class="kw">await </span>{
+        <span class="kw">let </span>certificates = <span class="kw">match </span><span class="self">self</span>.certificate_store.read_all(digests.to_owned()) {
             <span class="prelude-val">Ok</span>(certificates) =&gt; certificates,
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="comment">// just return at this point. Send back to the requestor
@@ -446,7 +418,7 @@
                     from: <span class="self">self</span>.name.clone(),
                 };
                 <span class="self">self</span>.primary_network
-                    .unreliable_send(address, <span class="kw-2">&amp;</span>message)
+                    .unreliable_send(origin.clone(), <span class="kw-2">&amp;</span>message)
                     .<span class="kw">await</span>;
 
                 <span class="kw">return </span><span class="prelude-val">Err</span>(HelperError::StoreError(err));
@@ -484,14 +456,14 @@
             from: <span class="self">self</span>.name.clone(),
         };
         <span class="self">self</span>.primary_network
-            .unreliable_send(address, <span class="kw-2">&amp;</span>message)
+            .unreliable_send(origin.clone(), <span class="kw-2">&amp;</span>message)
             .<span class="kw">await</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[instrument(level=<span class="string">&quot;debug&quot;</span>, skip_all, fields(num_certificate_ids = digests.len(), mode = batch_mode), err)]</span>
-    <span class="kw">async fn </span>process_certificates(
+    <span class="attribute">#[instrument(level=<span class="string">&quot;debug&quot;</span>, skip_all, fields(num_certificate_ids = digests.len(), mode = batch_mode), err)]
+    </span><span class="kw">async fn </span>process_certificates(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         digests: Vec&lt;CertificateDigest&gt;,
         origin: PublicKey,
@@ -503,16 +475,8 @@
             ));
         }
 
-        <span class="comment">// get the requestor&#39;s address.
-        </span><span class="kw">let </span>address = <span class="kw">match </span><span class="self">self</span>.committee.primary(<span class="kw-2">&amp;</span>origin) {
-            <span class="prelude-val">Ok</span>(x) =&gt; x.primary_to_primary,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(HelperError::UnknownAuthority(origin.encode_base64()));
-            }
-        };
-
         <span class="comment">// TODO [issue #195]: Do some accounting to prevent bad nodes from monopolizing our resources.
-        </span><span class="kw">let </span>certificates = <span class="kw">match </span><span class="self">self</span>.certificate_store.read_all(digests.to_owned()).<span class="kw">await </span>{
+        </span><span class="kw">let </span>certificates = <span class="kw">match </span><span class="self">self</span>.certificate_store.read_all(digests.to_owned()) {
             <span class="prelude-val">Ok</span>(certificates) =&gt; certificates,
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="macro">error!</span>(<span class="string">&quot;Error while retrieving certificates: {err}&quot;</span>);
@@ -541,14 +505,14 @@
             };
 
             <span class="self">self</span>.primary_network
-                .unreliable_send(address.clone(), <span class="kw-2">&amp;</span>message)
+                .unreliable_send(origin.clone(), <span class="kw-2">&amp;</span>message)
                 .<span class="kw">await</span>;
         } <span class="kw">else </span>{
             <span class="kw">for </span>certificate <span class="kw">in </span>certificates.into_iter().flatten() {
                 <span class="comment">// TODO: Remove this deserialization-serialization in the critical path.
                 </span><span class="kw">let </span>message = PrimaryMessage::Certificate(certificate);
                 <span class="self">self</span>.primary_network
-                    .unreliable_send(address.clone(), <span class="kw-2">&amp;</span>message)
+                    .unreliable_send(origin.clone(), <span class="kw-2">&amp;</span>message)
                     .<span class="kw">await</span>;
             }
         }
@@ -557,4 +521,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="primary" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (40336865f 2022-08-15)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="primary" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c2804e6ec 2022-09-07)" ></div></body></html>

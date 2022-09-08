@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `node/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../node/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../node/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../node/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `node/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../node/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../node/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../node/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -368,34 +368,64 @@
 <span id="368">368</span>
 <span id="369">369</span>
 <span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-</span><span class="kw">use </span>config::{Parameters, SharedCommittee, WorkerId};
+</span><span class="kw">use </span>config::{Parameters, SharedCommittee, SharedWorkerCache, WorkerId};
 <span class="kw">use </span>consensus::{
     bullshark::Bullshark,
     dag::Dag,
     metrics::{ChannelMetrics, ConsensusMetrics},
-    Consensus,
+    Consensus, ConsensusOutput,
 };
-<span class="kw">use </span>crypto::{
-    traits::{KeyPair <span class="kw">as _</span>, VerifyingKey},
-    KeyPair, PublicKey,
+
+<span class="kw">use </span>crypto::{KeyPair, PublicKey};
+<span class="kw">use </span>executor::{
+    get_restored_consensus_output, ExecutionState, Executor, ExecutorOutput, SerializedTransaction,
+    SubscriberResult,
 };
-<span class="kw">use </span>executor::{ExecutionState, Executor, ExecutorOutput, SerializedTransaction, SubscriberResult};
+<span class="kw">use </span>fastcrypto::traits::{KeyPair <span class="kw">as _</span>, VerifyingKey};
+<span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>primary::{BlockCommand, NetworkModel, PayloadToken, Primary, PrimaryChannelMetrics};
 <span class="kw">use </span>prometheus::{IntGauge, Registry};
 <span class="kw">use </span>std::{fmt::Debug, sync::Arc};
+<span class="kw">use </span>storage::{CertificateStore, CertificateToken};
 <span class="kw">use </span>store::{
     reopen,
     rocks::{open_cf, DBMap},
     Store,
 };
-<span class="kw">use </span>task_group::{TaskGroup, TaskManager};
 <span class="kw">use </span>tokio::{
     sync::{mpsc::Sender, watch},
-    task::{JoinError, JoinHandle},
+    task::JoinHandle,
 };
-<span class="kw">use </span>tracing::debug;
+<span class="kw">use </span>tracing::{debug, info};
 <span class="kw">use </span>types::{
     metered_channel, Batch, BatchDigest, Certificate, CertificateDigest, ConsensusStore, Header,
     HeaderDigest, ReconfigureNotification, Round, SequenceNumber, SerializedBatchMessage,
@@ -409,17 +439,18 @@
 <span class="doccomment">/// All the data stores of the node.
 </span><span class="kw">pub struct </span>NodeStorage {
     <span class="kw">pub </span>header_store: Store&lt;HeaderDigest, Header&gt;,
-    <span class="kw">pub </span>certificate_store: Store&lt;CertificateDigest, Certificate&gt;,
+    <span class="kw">pub </span>certificate_store: CertificateStore,
     <span class="kw">pub </span>payload_store: Store&lt;(BatchDigest, WorkerId), PayloadToken&gt;,
     <span class="kw">pub </span>batch_store: Store&lt;BatchDigest, SerializedBatchMessage&gt;,
     <span class="kw">pub </span>consensus_store: Arc&lt;ConsensusStore&gt;,
-    <span class="kw">pub </span>temp_batch_store: Store&lt;BatchDigest, Batch&gt;,
+    <span class="kw">pub </span>temp_batch_store: Store&lt;(CertificateDigest, BatchDigest), Batch&gt;,
 }
 
 <span class="kw">impl </span>NodeStorage {
     <span class="doccomment">/// The datastore column family names.
     </span><span class="kw">const </span>HEADERS_CF: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;headers&quot;</span>;
     <span class="kw">const </span>CERTIFICATES_CF: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;certificates&quot;</span>;
+    <span class="kw">const </span>CERTIFICATE_ID_BY_ROUND_CF: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;certificate_id_by_round&quot;</span>;
     <span class="kw">const </span>PAYLOAD_CF: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;payload&quot;</span>;
     <span class="kw">const </span>BATCHES_CF: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;batches&quot;</span>;
     <span class="kw">const </span>LAST_COMMITTED_CF: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;last_committed&quot;</span>;
@@ -434,6 +465,7 @@
             <span class="kw-2">&amp;</span>[
                 <span class="self">Self</span>::HEADERS_CF,
                 <span class="self">Self</span>::CERTIFICATES_CF,
+                <span class="self">Self</span>::CERTIFICATE_ID_BY_ROUND_CF,
                 <span class="self">Self</span>::PAYLOAD_CF,
                 <span class="self">Self</span>::BATCHES_CF,
                 <span class="self">Self</span>::LAST_COMMITTED_CF,
@@ -446,6 +478,7 @@
         <span class="kw">let </span>(
             header_map,
             certificate_map,
+            certificate_id_by_round_map,
             payload_map,
             batch_map,
             last_committed_map,
@@ -454,15 +487,16 @@
         ) = <span class="macro">reopen!</span>(<span class="kw-2">&amp;</span>rocksdb,
             <span class="self">Self</span>::HEADERS_CF;&lt;HeaderDigest, Header&gt;,
             <span class="self">Self</span>::CERTIFICATES_CF;&lt;CertificateDigest, Certificate&gt;,
+            <span class="self">Self</span>::CERTIFICATE_ID_BY_ROUND_CF;&lt;(Round, CertificateDigest), CertificateToken&gt;,
             <span class="self">Self</span>::PAYLOAD_CF;&lt;(BatchDigest, WorkerId), PayloadToken&gt;,
             <span class="self">Self</span>::BATCHES_CF;&lt;BatchDigest, SerializedBatchMessage&gt;,
             <span class="self">Self</span>::LAST_COMMITTED_CF;&lt;PublicKey, Round&gt;,
             <span class="self">Self</span>::SEQUENCE_CF;&lt;SequenceNumber, CertificateDigest&gt;,
-            <span class="self">Self</span>::TEMP_BATCH_CF;&lt;BatchDigest, Batch&gt;
+            <span class="self">Self</span>::TEMP_BATCH_CF;&lt;(CertificateDigest, BatchDigest), Batch&gt;
         );
 
         <span class="kw">let </span>header_store = Store::new(header_map);
-        <span class="kw">let </span>certificate_store = Store::new(certificate_map);
+        <span class="kw">let </span>certificate_store = CertificateStore::new(certificate_map, certificate_id_by_round_map);
         <span class="kw">let </span>payload_store = Store::new(payload_map);
         <span class="kw">let </span>batch_store = Store::new(batch_map);
         <span class="kw">let </span>consensus_store = Arc::new(ConsensusStore::new(last_committed_map, sequence_map));
@@ -492,6 +526,8 @@
         </span>keypair: KeyPair,
         <span class="comment">// The committee information.
         </span>committee: SharedCommittee,
+        <span class="comment">// The worker information cache.
+        </span>worker_cache: SharedWorkerCache,
         <span class="comment">// The node&#39;s storage.
         </span>store: <span class="kw-2">&amp;</span>NodeStorage,
         <span class="comment">// The configuration parameters.
@@ -508,7 +544,7 @@
         </span>tx_confirmation: Sender&lt;ExecutorOutput&lt;State&gt;&gt;,
         <span class="comment">// A prometheus exporter Registry to use for the metrics
         </span>registry: <span class="kw-2">&amp;</span>Registry,
-    ) -&gt; SubscriberResult&lt;TaskManager&lt;JoinError&gt;&gt;
+    ) -&gt; SubscriberResult&lt;Vec&lt;JoinHandle&lt;()&gt;&gt;&gt;
     <span class="kw">where
         </span>State: ExecutionState + Send + Sync + <span class="lifetime">&#39;static</span>,
         State::Outcome: Send + <span class="lifetime">&#39;static</span>,
@@ -552,7 +588,7 @@
             <span class="kw">let </span>consensus_metrics = Arc::new(ConsensusMetrics::new(registry));
             <span class="kw">let </span>(handle, dag) = Dag::new(<span class="kw-2">&amp;</span>committee.load(), rx_new_certificates, consensus_metrics);
 
-            handles.push((<span class="string">&quot;dag&quot;</span>, handle));
+            handles.push(handle);
 
             (<span class="prelude-val">Some</span>(Arc::new(dag)), NetworkModel::Asynchronous)
         } <span class="kw">else </span>{
@@ -575,9 +611,9 @@
 
         <span class="comment">// Inject memory profiling here if we build with dhat-heap feature flag
         // Put name of primary in heap profile to distinguish diff primaries
-        </span><span class="attribute">#[cfg(feature = <span class="string">&quot;dhat-heap&quot;</span>)]</span>
-        <span class="kw">let </span>profiler = {
-            <span class="kw">use </span>crypto::traits::EncodeDecodeBase64;
+        </span><span class="attribute">#[cfg(feature = <span class="string">&quot;dhat-heap&quot;</span>)]
+        </span><span class="kw">let </span>profiler = {
+            <span class="kw">use </span>fastcrypto::traits::EncodeDecodeBase64;
             <span class="kw">use </span>std::path::Path;
 
             <span class="kw">let </span>heap_file = <span class="macro">format!</span>(<span class="string">&quot;dhat-heap-{}.json&quot;</span>, name.encode_base64());
@@ -593,6 +629,7 @@
             name.clone(),
             keypair,
             committee.clone(),
+            worker_cache.clone(),
             parameters.clone(),
             store.header_store.clone(),
             store.certificate_store.clone(),
@@ -613,12 +650,12 @@
         // otherwise this function exits immediately and the profile is dumped way too soon.
         // See https://github.com/nnethercote/dhat-rs/issues/19 for a panic that happens,
         // but at least 2 primaries should complete and dump their profiles.
-        </span><span class="attribute">#[cfg(feature = <span class="string">&quot;dhat-heap&quot;</span>)]</span>
-        {
+        </span><span class="attribute">#[cfg(feature = <span class="string">&quot;dhat-heap&quot;</span>)]
+        </span>{
             <span class="kw">use </span>std::time::Duration;
 
-            <span class="attribute">#[allow(clippy::redundant_clone)]</span>
-            <span class="kw">let </span>profiler2 = profiler.clone();
+            <span class="attribute">#[allow(clippy::redundant_clone)]
+            </span><span class="kw">let </span>profiler2 = profiler.clone();
             std::thread::spawn(|| {
                 std::thread::sleep(Duration::from_secs(<span class="number">240</span>));
                 <span class="macro">println!</span>(<span class="string">&quot;Dropping DHAT profiler...&quot;</span>);
@@ -626,13 +663,7 @@
             });
         }
 
-        <span class="kw">let </span>(task_group, task_manager) = TaskGroup::new();
-        <span class="kw">for </span>(name, handle) <span class="kw">in </span>handles {
-            <span class="comment">// The tasks will be awaited with the `task_manager`, so the task handles / futures can be dropped.
-            </span><span class="kw">let _ </span>= task_group.spawn(name, handle);
-        }
-
-        <span class="prelude-val">Ok</span>(task_manager)
+        <span class="prelude-val">Ok</span>(handles)
     }
 
     <span class="doccomment">/// Spawn the consensus core and the client executing transactions.
@@ -650,7 +681,7 @@
         )&gt;,
         tx_get_block_commands: metered_channel::Sender&lt;BlockCommand&gt;,
         registry: <span class="kw-2">&amp;</span>Registry,
-    ) -&gt; SubscriberResult&lt;Vec&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, JoinHandle&lt;()&gt;)&gt;&gt;
+    ) -&gt; SubscriberResult&lt;Vec&lt;JoinHandle&lt;()&gt;&gt;&gt;
     <span class="kw">where
         </span>PublicKey: VerifyingKey,
         State: ExecutionState + Send + Sync + <span class="lifetime">&#39;static</span>,
@@ -663,7 +694,27 @@
         <span class="kw">let </span>(tx_sequence, rx_sequence) =
             metered_channel::channel(<span class="self">Self</span>::CHANNEL_CAPACITY, <span class="kw-2">&amp;</span>channel_metrics.tx_sequence);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>handles = Vec::new();
+        <span class="comment">// Check for any certs that have been sent by consensus but were not processed by the executor.
+        </span><span class="kw">let </span>restored_consensus_output = get_restored_consensus_output(
+            store.consensus_store.clone(),
+            store.certificate_store.clone(),
+            execution_state.clone(),
+        )
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.into_iter()
+        .sorted_by(|a, b| a.consensus_index.cmp(<span class="kw-2">&amp;</span>b.consensus_index))
+        .collect::&lt;Vec&lt;ConsensusOutput&gt;&gt;();
+
+        <span class="kw">let </span>len_restored = restored_consensus_output.len() <span class="kw">as </span>u64;
+        <span class="kw">if </span>len_restored &gt; <span class="number">0 </span>{
+            <span class="macro">info!</span>(
+                <span class="string">&quot;Consensus output on its way to the executor was restored for {} certificates&quot;</span>,
+                len_restored
+            );
+        }
+        consensus_metrics
+            .recovered_consensus_output
+            .inc_by(len_restored);
 
         <span class="comment">// Spawn the consensus core who only sequences transactions.
         </span><span class="kw">let </span>ordering_engine = Bullshark::new(
@@ -671,7 +722,7 @@
             store.consensus_store.clone(),
             parameters.gc_depth,
         );
-        <span class="kw">let </span>consensus_handle = Consensus::spawn(
+        <span class="kw">let </span>consensus_handles = Consensus::spawn(
             (<span class="kw-2">**</span>committee.load()).clone(),
             store.consensus_store.clone(),
             store.certificate_store.clone(),
@@ -683,7 +734,6 @@
             consensus_metrics.clone(),
             parameters.gc_depth,
         );
-        handles.push((<span class="string">&quot;consensus&quot;</span>, consensus_handle));
 
         <span class="comment">// Spawn the client executing the transactions. It can also synchronize with the
         // subscriber handler if it missed some transactions.
@@ -695,48 +745,52 @@
             <span class="comment">/* tx_output */ </span>tx_confirmation,
             tx_get_block_commands,
             registry,
+            restored_consensus_output,
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
-        handles.extend(executor_handles);
 
-        <span class="prelude-val">Ok</span>(handles)
+        <span class="prelude-val">Ok</span>(executor_handles
+            .into_iter()
+            .chain(std::iter::once(consensus_handles))
+            .collect())
     }
 
     <span class="doccomment">/// Spawn a specified number of workers.
     </span><span class="kw">pub fn </span>spawn_workers(
         <span class="comment">// The public key of this authority.
-        </span>name: PublicKey,
-        <span class="comment">// The ids of the validators to spawn.
-        </span>ids: Vec&lt;WorkerId&gt;,
+        </span>primary_name: PublicKey,
+        <span class="comment">// The ids &amp; keypairs of the workers to spawn.
+        </span>ids_and_keypairs: Vec&lt;(WorkerId, KeyPair)&gt;,
         <span class="comment">// The committee information.
         </span>committee: SharedCommittee,
+        <span class="comment">// The worker information cache.
+        </span>worker_cache: SharedWorkerCache,
         <span class="comment">// The node&#39;s storage,
         </span>store: <span class="kw-2">&amp;</span>NodeStorage,
         <span class="comment">// The configuration parameters.
         </span>parameters: Parameters,
         <span class="comment">// The prometheus metrics Registry
         </span>registry: <span class="kw-2">&amp;</span>Registry,
-    ) -&gt; TaskManager&lt;JoinError&gt; {
+    ) -&gt; Vec&lt;JoinHandle&lt;()&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>handles = Vec::new();
+
         <span class="kw">let </span>metrics = initialise_metrics(registry);
 
-        <span class="kw">let </span>(task_group, task_manager) = TaskGroup::new();
-        <span class="kw">for </span>id <span class="kw">in </span>ids {
+        <span class="kw">for </span>(id, keypair) <span class="kw">in </span>ids_and_keypairs {
             <span class="kw">let </span>worker_handles = Worker::spawn(
-                name.clone(),
+                primary_name.clone(),
+                keypair,
                 id,
                 committee.clone(),
+                worker_cache.clone(),
                 parameters.clone(),
                 store.batch_store.clone(),
                 metrics.clone(),
             );
-            <span class="comment">// TODO(narwhal/727): propagate worker task names.
-            </span><span class="kw">for </span>(i, h) <span class="kw">in </span>worker_handles.into_iter().enumerate() {
-                <span class="kw">let _ </span>= task_group.spawn(<span class="macro">format!</span>(<span class="string">&quot;worker_{}_{}&quot;</span>, id, i), h);
-            }
+            handles.extend(worker_handles);
         }
-
-        task_manager
+        handles
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="node" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (40336865f 2022-08-15)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="node" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c2804e6ec 2022-09-07)" ></div></body></html>

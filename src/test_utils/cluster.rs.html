@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `test_utils/src/cluster.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cluster.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../test_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../test_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../test_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `test_utils/src/cluster.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cluster.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../test_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../test_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../test_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -757,13 +757,55 @@
 <span id="757">757</span>
 <span id="758">758</span>
 <span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-</span><span class="kw">use crate</span>::{committee, keys, temp_dir};
-<span class="kw">use </span>arc_swap::{ArcSwap, ArcSwapOption};
-<span class="kw">use </span>config::{Committee, Parameters, SharedCommittee, WorkerId};
-<span class="kw">use </span>crypto::{traits::KeyPair <span class="kw">as _</span>, KeyPair, PublicKey};
-<span class="kw">use </span>executor::{SerializedTransaction, SubscriberResult, DEFAULT_CHANNEL_SIZE};
+</span><span class="kw">use crate</span>::{temp_dir, CommitteeFixture};
+<span class="kw">use </span>arc_swap::ArcSwap;
+<span class="kw">use </span>config::{Parameters, SharedCommittee, SharedWorkerCache, WorkerId};
+<span class="kw">use </span>crypto::{KeyPair, PublicKey};
+<span class="kw">use </span>executor::{SerializedTransaction, SubscriberResult};
+<span class="kw">use </span>fastcrypto::traits::KeyPair <span class="kw">as _</span>;
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>multiaddr::Multiaddr;
 <span class="kw">use </span>node::{
@@ -773,66 +815,69 @@
 };
 <span class="kw">use </span>prometheus::{proto::Metric, Registry};
 <span class="kw">use </span>std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc, sync::Arc, time::Duration};
-<span class="kw">use </span>task_group::TaskManager;
+<span class="kw">use </span>telemetry_subscribers::TelemetryGuards;
 <span class="kw">use </span>tokio::{
     sync::{broadcast::Sender, mpsc::channel, RwLock},
-    task::{JoinError, JoinHandle},
+    task::JoinHandle,
 };
 <span class="kw">use </span>tonic::transport::Channel;
 <span class="kw">use </span>tracing::info;
 <span class="kw">use </span>types::{ConfigurationClient, ProposerClient, TransactionsClient};
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="attribute">#[path = <span class="string">&quot;tests/cluster_tests.rs&quot;</span>]</span>
-<span class="kw">pub mod </span>cluster_tests;
+<span class="attribute">#[cfg(test)]
+#[path = <span class="string">&quot;tests/cluster_tests.rs&quot;</span>]
+</span><span class="kw">pub mod </span>cluster_tests;
 
 <span class="kw">pub struct </span>Cluster {
+    <span class="attribute">#[allow(unused)]
+    </span>fixture: CommitteeFixture,
     authorities: HashMap&lt;usize, AuthorityDetails&gt;,
     <span class="kw">pub </span>committee_shared: SharedCommittee,
-    <span class="attribute">#[allow(dead_code)]</span>
-    parameters: Parameters,
+    <span class="kw">pub </span>worker_cache_shared: SharedWorkerCache,
+    <span class="attribute">#[allow(dead_code)]
+    </span>parameters: Parameters,
 }
 
 <span class="kw">impl </span>Cluster {
     <span class="doccomment">/// Initialises a new cluster by the provided parameters. The cluster will
     /// create all the authorities (primaries &amp; workers) that are defined under
     /// the committee structure, but none of them will be started.
-    /// If an `input_committee` is provided then this will be used, otherwise the default
-    /// will be used instead.
+    ///
     /// When the `internal_consensus_enabled` is true then the standard internal
     /// consensus engine will be enabled. If false, then the internal consensus will
     /// be disabled and the gRPC server will be enabled to manage the Collections &amp; the
     /// DAG externally.
-    </span><span class="kw">pub fn </span>new(
-        parameters: <span class="prelude-ty">Option</span>&lt;Parameters&gt;,
-        input_committee: <span class="prelude-ty">Option</span>&lt;Committee&gt;,
-        internal_consensus_enabled: bool,
-    ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>c = input_committee.unwrap_or_else(|| committee(<span class="prelude-val">None</span>));
+    </span><span class="kw">pub fn </span>new(parameters: <span class="prelude-ty">Option</span>&lt;Parameters&gt;, internal_consensus_enabled: bool) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>fixture = CommitteeFixture::builder().randomize_ports(<span class="bool-val">true</span>).build();
+        <span class="kw">let </span>c = fixture.committee();
+        <span class="kw">let </span>shared_worker_cache = fixture.shared_worker_cache();
         <span class="kw">let </span>shared_committee = Arc::new(ArcSwap::from_pointee(c));
         <span class="kw">let </span>params = parameters.unwrap_or_else(<span class="self">Self</span>::parameters);
 
         <span class="macro">info!</span>(<span class="string">&quot;###### Creating new cluster ######&quot;</span>);
         <span class="macro">info!</span>(<span class="string">&quot;Validator keys:&quot;</span>);
-        <span class="kw">let </span>k = keys(<span class="prelude-val">None</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>nodes = HashMap::new();
 
-        <span class="kw">for </span>(id, key_pair) <span class="kw">in </span>k.into_iter().enumerate() {
-            <span class="macro">info!</span>(<span class="string">&quot;Key {id} -&gt; {}&quot;</span>, key_pair.public().clone());
+        <span class="kw">for </span>(id, authority_fixture) <span class="kw">in </span>fixture.authorities().enumerate() {
+            <span class="macro">info!</span>(<span class="string">&quot;Key {id} -&gt; {}&quot;</span>, authority_fixture.public_key());
 
             <span class="kw">let </span>authority = AuthorityDetails::new(
                 id,
-                key_pair,
+                authority_fixture.keypair().copy(),
+                authority_fixture.worker_keypairs(),
                 params.clone(),
                 shared_committee.clone(),
+                shared_worker_cache.clone(),
                 internal_consensus_enabled,
             );
             nodes.insert(id, authority);
         }
 
         <span class="self">Self </span>{
+            fixture,
             authorities: nodes,
             committee_shared: shared_committee,
+            worker_cache_shared: shared_worker_cache,
             parameters: params,
         }
     }
@@ -1020,17 +1065,17 @@
     }
 }
 
-<span class="attribute">#[derive(Clone)]</span>
-<span class="kw">pub struct </span>PrimaryNodeDetails {
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>PrimaryNodeDetails {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>key_pair: Arc&lt;KeyPair&gt;,
     <span class="kw">pub </span>tx_transaction_confirmation: Sender&lt;(SubscriberResult&lt;Vec&lt;u8&gt;&gt;, SerializedTransaction)&gt;,
     registry: Registry,
     store_path: PathBuf,
     committee: SharedCommittee,
+    worker_cache: SharedWorkerCache,
     parameters: Parameters,
     handlers: Rc&lt;RefCell&lt;Vec&lt;JoinHandle&lt;()&gt;&gt;&gt;&gt;,
-    primary: Rc&lt;RefCell&lt;<span class="prelude-ty">Option</span>&lt;TaskManager&lt;JoinError&gt;&gt;&gt;&gt;,
     internal_consensus_enabled: bool,
 }
 
@@ -1040,6 +1085,7 @@
         key_pair: KeyPair,
         parameters: Parameters,
         committee: SharedCommittee,
+        worker_cache: SharedWorkerCache,
         internal_consensus_enabled: bool,
     ) -&gt; <span class="self">Self </span>{
         <span class="comment">// used just to initialise the struct value
@@ -1052,9 +1098,9 @@
             store_path: temp_dir(),
             tx_transaction_confirmation: tx,
             committee,
+            worker_cache,
             parameters,
             handlers: Rc::new(RefCell::new(Vec::new())),
-            primary: Rc::new(RefCell::new(<span class="prelude-val">None</span>)),
             internal_consensus_enabled,
         }
     }
@@ -1094,22 +1140,21 @@
 
         <span class="comment">// Primary node
         </span><span class="kw">let </span>primary_store: NodeStorage = NodeStorage::reopen(store_path.clone());
-        <span class="self">self</span>.primary.replace(<span class="prelude-val">Some</span>(
-            Node::spawn_primary(
-                <span class="self">self</span>.key_pair.copy(),
-                <span class="self">self</span>.committee.clone(),
-                <span class="kw-2">&amp;</span>primary_store,
-                <span class="self">self</span>.parameters.clone(),
-                <span class="comment">/* consensus */ </span><span class="self">self</span>.internal_consensus_enabled,
-                <span class="comment">/* execution_state */ </span>Arc::new(SimpleExecutionState::default()),
-                tx_transaction_confirmation,
-                <span class="kw-2">&amp;</span>registry,
-            )
-            .<span class="kw">await
-            </span>.unwrap(),
-        ));
+        <span class="kw">let </span><span class="kw-2">mut </span>primary_handlers = Node::spawn_primary(
+            <span class="self">self</span>.key_pair.copy(),
+            <span class="self">self</span>.committee.clone(),
+            <span class="self">self</span>.worker_cache.clone(),
+            <span class="kw-2">&amp;</span>primary_store,
+            <span class="self">self</span>.parameters.clone(),
+            <span class="comment">/* consensus */ </span><span class="self">self</span>.internal_consensus_enabled,
+            <span class="comment">/* execution_state */ </span>Arc::new(SimpleExecutionState::default()),
+            tx_transaction_confirmation,
+            <span class="kw-2">&amp;</span>registry,
+        )
+        .<span class="kw">await
+        </span>.unwrap();
 
-        <span class="kw">let </span>(tx, <span class="kw">_</span>) = tokio::sync::broadcast::channel(DEFAULT_CHANNEL_SIZE);
+        <span class="kw">let </span>(tx, <span class="kw">_</span>) = tokio::sync::broadcast::channel(primary::CHANNEL_CAPACITY);
         <span class="kw">let </span>transactions_sender = tx.clone();
         <span class="comment">// spawn a task to listen on the committed transactions
         // and translate to a mpmc channel
@@ -1122,8 +1167,12 @@
                 <span class="kw">let _ </span>= transactions_sender.send(t);
             }
         });
-        <span class="self">self</span>.handlers.replace(<span class="macro">vec!</span>[h]);
 
+        <span class="comment">// add the tasks&#39;s handle to the primary&#39;s handle so can be shutdown
+        // with the others.
+        </span>primary_handlers.push(h);
+
+        <span class="self">self</span>.handlers.replace(primary_handlers);
         <span class="self">self</span>.store_path = store_path;
         <span class="self">self</span>.registry = registry;
         <span class="self">self</span>.tx_transaction_confirmation = tx;
@@ -1131,30 +1180,33 @@
 
     <span class="kw">fn </span>stop(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.handlers.borrow().iter().for_each(|h| h.abort());
-        <span class="self">self</span>.primary.replace(<span class="prelude-val">None</span>);
         <span class="macro">info!</span>(<span class="string">&quot;Aborted primary node for id {}&quot;</span>, <span class="self">self</span>.id);
     }
 
-    <span class="doccomment">/// Returns whether the primary is still running, by checking if the TaskManager
-    /// and task handles exist and at least one of them is not finished.
+    <span class="doccomment">/// This method returns whether the node is still running or not. We
+    /// iterate over all the handlers and check whether there is still any
+    /// that is not finished. If we find at least one, then we report the
+    /// node as still running.
     </span><span class="kw">pub fn </span>is_running(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">if </span><span class="self">self</span>.primary.borrow().is_none() || <span class="self">self</span>.handlers.borrow().is_empty() {
+        <span class="kw">if </span><span class="self">self</span>.handlers.borrow().is_empty() {
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
+
         <span class="self">self</span>.handlers.borrow().iter().any(|h| !h.is_finished())
     }
 }
 
-<span class="attribute">#[derive(Clone)]</span>
-<span class="kw">pub struct </span>WorkerNodeDetails {
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>WorkerNodeDetails {
     <span class="kw">pub </span>id: WorkerId,
     <span class="kw">pub </span>transactions_address: Multiaddr,
     <span class="kw">pub </span>registry: Registry,
     name: PublicKey,
     committee: SharedCommittee,
+    worker_cache: SharedWorkerCache,
     parameters: Parameters,
     store_path: PathBuf,
-    worker: Arc&lt;ArcSwapOption&lt;TaskManager&lt;JoinError&gt;&gt;&gt;,
+    handlers: Arc&lt;ArcSwap&lt;Vec&lt;JoinHandle&lt;()&gt;&gt;&gt;&gt;,
 }
 
 <span class="kw">impl </span>WorkerNodeDetails {
@@ -1164,6 +1216,7 @@
         parameters: Parameters,
         transactions_address: Multiaddr,
         committee: SharedCommittee,
+        worker_cache: SharedWorkerCache,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             id,
@@ -1172,13 +1225,14 @@
             store_path: temp_dir(),
             transactions_address,
             committee,
+            worker_cache,
             parameters,
-            worker: Arc::new(ArcSwapOption::from(<span class="prelude-val">None</span>)),
+            handlers: Arc::new(ArcSwap::from_pointee(Vec::new())),
         }
     }
 
     <span class="doccomment">/// Starts the node. When preserve_store is true then the last used
-    </span><span class="kw">async fn </span>start(<span class="kw-2">&amp;mut </span><span class="self">self</span>, preserve_store: bool) {
+    </span><span class="kw">async fn </span>start(<span class="kw-2">&amp;mut </span><span class="self">self</span>, keypair: KeyPair, preserve_store: bool) {
         <span class="kw">if </span><span class="self">self</span>.is_running() {
             <span class="macro">panic!</span>(
                 <span class="string">&quot;Worker with id {} is already running, can&#39;t start again&quot;</span>,
@@ -1196,28 +1250,32 @@
         };
 
         <span class="kw">let </span>worker_store = NodeStorage::reopen(store_path.clone());
-        <span class="self">self</span>.worker.store(<span class="prelude-val">Some</span>(Arc::new(Node::spawn_workers(
+        <span class="kw">let </span>worker_handlers = Node::spawn_workers(
             <span class="self">self</span>.name.clone(),
-            <span class="macro">vec!</span>[<span class="self">self</span>.id],
+            <span class="macro">vec!</span>[(<span class="self">self</span>.id, keypair)],
             <span class="self">self</span>.committee.clone(),
+            <span class="self">self</span>.worker_cache.clone(),
             <span class="kw-2">&amp;</span>worker_store,
             <span class="self">self</span>.parameters.clone(),
             <span class="kw-2">&amp;</span>registry,
-        ))));
+        );
 
+        <span class="self">self</span>.handlers.swap(Arc::new(worker_handlers));
         <span class="self">self</span>.store_path = store_path;
         <span class="self">self</span>.registry = registry;
     }
 
     <span class="kw">fn </span>stop(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.worker.store(<span class="prelude-val">None</span>);
+        <span class="self">self</span>.handlers.load().iter().for_each(|h| h.abort());
         <span class="macro">info!</span>(<span class="string">&quot;Aborted worker node for id {}&quot;</span>, <span class="self">self</span>.id);
     }
 
-    <span class="doccomment">/// Returns whether the worker is still running, by checking if the
-    /// TaskManager for worker tasks exists.
+    <span class="doccomment">/// This method returns whether the node is still running or not. We
+    /// iterate over all the handlers and check whether there is still any
+    /// that is not finished. If we find at least one, then we report the
+    /// node as still running.
     </span><span class="kw">pub fn </span>is_running(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.worker.load().is_some()
+        <span class="self">self</span>.handlers.load().iter().any(|h| !h.is_finished())
     }
 }
 
@@ -1228,9 +1286,9 @@
 /// The Authority can be cloned and reused across the instances as its
 /// internals are thread safe. So changes made from one instance will be
 /// reflected to another.
-</span><span class="attribute">#[allow(dead_code)]</span>
-<span class="attribute">#[derive(Clone)]</span>
-<span class="kw">pub struct </span>AuthorityDetails {
+</span><span class="attribute">#[allow(dead_code)]
+#[derive(Clone)]
+</span><span class="kw">pub struct </span>AuthorityDetails {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>name: PublicKey,
     internal: Arc&lt;RwLock&lt;AuthorityDetailsInternal&gt;&gt;,
@@ -1238,6 +1296,7 @@
 
 <span class="kw">struct </span>AuthorityDetailsInternal {
     primary: PrimaryNodeDetails,
+    worker_keypairs: Vec&lt;KeyPair&gt;,
     workers: HashMap&lt;WorkerId, WorkerNodeDetails&gt;,
 }
 
@@ -1245,8 +1304,10 @@
     <span class="kw">pub fn </span>new(
         id: usize,
         key_pair: KeyPair,
+        worker_keypairs: Vec&lt;KeyPair&gt;,
         parameters: Parameters,
         committee: SharedCommittee,
+        worker_cache: SharedWorkerCache,
         internal_consensus_enabled: bool,
     ) -&gt; <span class="self">Self </span>{
         <span class="comment">// Create all the nodes we have in the committee
@@ -1256,6 +1317,7 @@
             key_pair,
             parameters.clone(),
             committee.clone(),
+            worker_cache.clone(),
             internal_consensus_enabled,
         );
 
@@ -1263,25 +1325,23 @@
         // act as place holder setups. That gives us the power in a clear way manage
         // the nodes independently.
         </span><span class="kw">let </span><span class="kw-2">mut </span>workers = HashMap::new();
-        <span class="kw">for </span>(worker_id, addresses) <span class="kw">in </span>committee
-            .load()
-            .authorities
-            .get(<span class="kw-2">&amp;</span>name)
-            .unwrap()
-            .workers
-            .clone()
-        {
+        <span class="kw">for </span>(worker_id, addresses) <span class="kw">in </span>worker_cache.load().workers.get(<span class="kw-2">&amp;</span>name).unwrap().<span class="number">0</span>.clone() {
             <span class="kw">let </span>worker = WorkerNodeDetails::new(
                 worker_id,
                 name.clone(),
                 parameters.clone(),
                 addresses.transactions.clone(),
                 committee.clone(),
+                worker_cache.clone(),
             );
             workers.insert(worker_id, worker);
         }
 
-        <span class="kw">let </span>internal = AuthorityDetailsInternal { primary, workers };
+        <span class="kw">let </span>internal = AuthorityDetailsInternal {
+            primary,
+            worker_keypairs,
+            workers,
+        };
 
         <span class="self">Self </span>{
             id,
@@ -1327,9 +1387,15 @@
 
     <span class="kw">pub async fn </span>start_all_workers(<span class="kw-2">&amp;</span><span class="self">self</span>, preserve_store: bool) {
         <span class="kw">let </span><span class="kw-2">mut </span>internal = <span class="self">self</span>.internal.write().<span class="kw">await</span>;
+        <span class="kw">let </span>worker_keypairs = internal
+            .worker_keypairs
+            .iter()
+            .map(|kp| kp.copy())
+            .collect::&lt;Vec&lt;KeyPair&gt;&gt;();
 
-        <span class="kw">for </span>(<span class="kw">_</span>, worker) <span class="kw">in </span>internal.workers.iter_mut() {
-            worker.start(preserve_store).<span class="kw">await</span>;
+        <span class="kw">for </span>(id, worker) <span class="kw">in </span>internal.workers.iter_mut() {
+            <span class="kw">let </span>keypair = worker_keypairs.get(<span class="kw-2">*</span>id <span class="kw">as </span>usize).unwrap().copy();
+            worker.start(keypair, preserve_store).<span class="kw">await</span>;
         }
     }
 
@@ -1339,13 +1405,13 @@
     /// start with a fresh (empty) storage.
     </span><span class="kw">pub async fn </span>start_worker(<span class="kw-2">&amp;</span><span class="self">self</span>, id: WorkerId, preserve_store: bool) {
         <span class="kw">let </span><span class="kw-2">mut </span>internal = <span class="self">self</span>.internal.write().<span class="kw">await</span>;
-
+        <span class="kw">let </span>keypair = internal.worker_keypairs.get(id <span class="kw">as </span>usize).unwrap().copy();
         <span class="kw">let </span>worker = internal
             .workers
             .get_mut(<span class="kw-2">&amp;</span>id)
             .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Worker with id {} not found &quot;</span>, id));
 
-        worker.start(preserve_store).<span class="kw">await</span>;
+        worker.start(keypair, preserve_store).<span class="kw">await</span>;
     }
 
     <span class="kw">pub async fn </span>stop_worker(<span class="kw-2">&amp;</span><span class="self">self</span>, id: WorkerId) {
@@ -1516,5 +1582,21 @@
         <span class="bool-val">false
     </span>}
 }
+
+<span class="kw">pub fn </span>setup_tracing() -&gt; TelemetryGuards {
+    <span class="comment">// Setup tracing
+    </span><span class="kw">let </span>tracing_level = <span class="string">&quot;debug&quot;</span>;
+    <span class="kw">let </span>network_tracing_level = <span class="string">&quot;info&quot;</span>;
+
+    <span class="kw">let </span>log_filter = <span class="macro">format!</span>(<span class="string">&quot;{tracing_level},h2={network_tracing_level},tower={network_tracing_level},hyper={network_tracing_level},tonic::transport={network_tracing_level},quinn={network_tracing_level}&quot;</span>);
+
+    telemetry_subscribers::TelemetryConfig::new(<span class="string">&quot;narwhal&quot;</span>)
+        <span class="comment">// load env variables
+        </span>.with_env()
+        <span class="comment">// load special log filter
+        </span>.with_log_level(<span class="kw-2">&amp;</span>log_filter)
+        .init()
+        .<span class="number">0
+</span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="test_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (40336865f 2022-08-15)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="test_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c2804e6ec 2022-09-07)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primary/src/certificate_waiter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>certificate_waiter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../primary/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primary/src/certificate_waiter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>certificate_waiter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../primary/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../primary/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -222,34 +222,37 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 </span><span class="kw">use </span><span class="kw">crate</span>::metrics::PrimaryMetrics;
 <span class="kw">use </span>config::Committee;
 <span class="kw">use </span>dashmap::DashMap;
-<span class="kw">use </span>futures::{
-    future::try_join_all,
-    stream::{futures_unordered::FuturesUnordered, StreamExt <span class="kw">as _</span>},
-};
+<span class="kw">use </span>futures::future::try_join_all;
 <span class="kw">use </span>once_cell::sync::OnceCell;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>store::Store;
+<span class="kw">use </span>storage::CertificateStore;
 <span class="kw">use </span>tokio::{
     sync::{oneshot, watch},
     task::JoinHandle,
     time::{sleep, Duration, Instant},
 };
-<span class="kw">use </span>tracing::{error, info};
+<span class="kw">use </span>tracing::info;
 <span class="kw">use </span>types::{
+    bounded_future_queue::BoundedFuturesUnordered,
     error::{DagError, DagResult},
     metered_channel::{Receiver, Sender},
-    Certificate, CertificateDigest, HeaderDigest, ReconfigureNotification, Round,
+    try_fut_and_permit, Certificate, CertificateDigest, HeaderDigest, ReconfigureNotification,
+    Round,
 };
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="attribute">#[path = <span class="string">&quot;tests/certificate_waiter_tests.rs&quot;</span>]</span>
-<span class="kw">pub mod </span>certificate_waiter_tests;
+<span class="attribute">#[cfg(test)]
+#[path = <span class="string">&quot;tests/certificate_waiter_tests.rs&quot;</span>]
+</span><span class="kw">pub mod </span>certificate_waiter_tests;
 
 <span class="doccomment">/// The resolution of the timer that checks whether we received replies to our parent requests, and triggers
 /// a round of GC if we didn&#39;t.
@@ -261,7 +264,7 @@
     <span class="doccomment">/// The committee information.
     </span>committee: Committee,
     <span class="doccomment">/// The persistent storage.
-    </span>store: Store&lt;CertificateDigest, Certificate&gt;,
+    </span>store: CertificateStore,
     <span class="doccomment">/// Receiver for signal of round change
     </span>rx_consensus_round_updates: watch::Receiver&lt;u64&gt;,
     <span class="doccomment">/// The depth of the garbage collector.
@@ -282,10 +285,16 @@
 }
 
 <span class="kw">impl </span>CertificateWaiter {
-    <span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>spawn(
+    <span class="doccomment">/// Returns the max amount of pending certificates we should expect. In the worst case of causal completion,
+    /// this can be `self.gc_depth` x `self.committee.len()`
+    </span><span class="kw">pub fn </span>max_pending_certificates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.gc_depth <span class="kw">as </span>usize * <span class="self">self</span>.committee.size() * <span class="number">2
+    </span>}
+
+    <span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>spawn(
         committee: Committee,
-        store: Store&lt;CertificateDigest, Certificate&gt;,
+        store: CertificateStore,
         rx_consensus_round_updates: watch::Receiver&lt;u64&gt;,
         gc_depth: Round,
         rx_reconfigure: watch::Receiver&lt;ReconfigureNotification&gt;,
@@ -314,13 +323,13 @@
     /// delivers the specified header.
     </span><span class="kw">async fn </span>waiter(
         missing: Vec&lt;CertificateDigest&gt;,
-        store: <span class="kw-2">&amp;</span>Store&lt;CertificateDigest, Certificate&gt;,
+        store: CertificateStore,
         deliver: Certificate,
         cancel_handle: oneshot::Receiver&lt;()&gt;,
     ) -&gt; DagResult&lt;Certificate&gt; {
         <span class="kw">let </span>waiting: Vec&lt;<span class="kw">_</span>&gt; = missing.into_iter().map(|x| store.notify_read(x)).collect();
 
-        <span class="macro">tokio::select!</span> {
+        <span class="macro">tokio::select! </span>{
             result = try_join_all(waiting) =&gt; {
                 result.map(|<span class="kw">_</span>| deliver).map_err(DagError::from)
             }
@@ -330,7 +339,7 @@
     }
 
     <span class="kw">async fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let </span><span class="kw-2">mut </span>waiting = FuturesUnordered::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>waiting = BoundedFuturesUnordered::with_capacity(<span class="self">self</span>.max_pending_certificates());
         <span class="kw">let </span>timer = sleep(Duration::from_millis(GC_RESOLUTION));
         <span class="macro">tokio::pin!</span>(timer);
         <span class="kw">let </span><span class="kw-2">mut </span>attempt_garbage_collection;
@@ -340,8 +349,9 @@
             <span class="comment">// Initially set to not garbage collect
             </span>attempt_garbage_collection = <span class="bool-val">false</span>;
 
-            <span class="macro">tokio::select!</span> {
-                <span class="prelude-val">Some</span>(certificate) = <span class="self">self</span>.rx_synchronizer.recv() =&gt; {
+            <span class="macro">tokio::select! </span>{
+                <span class="comment">// We only accept new elements if we have &quot;room&quot; for them
+                </span><span class="prelude-val">Some</span>(certificate) = <span class="self">self</span>.rx_synchronizer.recv(), <span class="kw">if </span>waiting.available_permits() &gt; <span class="number">0 </span>=&gt; {
                     <span class="kw">if </span>certificate.epoch() &lt; <span class="self">self</span>.committee.epoch() {
                         <span class="kw">continue</span>;
                     }
@@ -363,21 +373,15 @@
                         inner
                     };
                     <span class="self">self</span>.pending.insert(header_id, (certificate.round(), once_cancel));
-                    <span class="kw">let </span>fut = <span class="self">Self</span>::waiter(wait_for, <span class="kw-2">&amp;</span><span class="self">self</span>.store, certificate, rx_cancel);
-                    waiting.push(fut);
+                    <span class="kw">let </span>fut = <span class="self">Self</span>::waiter(wait_for, <span class="self">self</span>.store.clone(), certificate, rx_cancel);
+                    waiting.push(fut).<span class="kw">await</span>;
                 }
-                <span class="prelude-val">Some</span>(result) = waiting.next() =&gt; <span class="kw">match </span>result {
-                    <span class="prelude-val">Ok</span>(certificate) =&gt; {
+                <span class="comment">// we poll the availability of a slot to send the result to the core simultaneously
+                </span>(<span class="prelude-val">Some</span>(certificate), permit) = <span class="macro">try_fut_and_permit!</span>(waiting.try_next(), <span class="self">self</span>.tx_core) =&gt; {
                         <span class="comment">// TODO [issue #115]: To ensure crash-recovery of consensus, it is not enough to send every
                         // certificate for which their ancestors are in the storage. After recovery, we may also
                         // need to send a all parents certificates with rounds greater then `last_committed`.
-
-                        </span><span class="self">self</span>.tx_core.send(certificate).<span class="kw">await</span>.expect(<span class="string">&quot;Failed to send certificate&quot;</span>);
-                    },
-                    <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="macro">error!</span>(<span class="string">&quot;{e}&quot;</span>);
-                        <span class="macro">panic!</span>(<span class="string">&quot;Storage failure: killing node.&quot;</span>);
-                    }
+                        </span>permit.send(certificate);
                 },
                 result = <span class="self">self</span>.rx_reconfigure.changed() =&gt; {
                     result.expect(<span class="string">&quot;Committee channel dropped&quot;</span>);
@@ -435,16 +439,20 @@
                 }
             }
 
-            <span class="self">self</span>.update_metrics();
+            <span class="self">self</span>.update_metrics(waiting.len());
         }
     }
 
-    <span class="kw">fn </span>update_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    <span class="kw">fn </span>update_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>, waiting_len: usize) {
         <span class="self">self</span>.metrics
             .pending_elements_certificate_waiter
             .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.committee.epoch.to_string()])
             .set(<span class="self">self</span>.pending.len() <span class="kw">as </span>i64);
+        <span class="self">self</span>.metrics
+            .waiting_elements_certificate_waiter
+            .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.committee.epoch.to_string()])
+            .set(waiting_len <span class="kw">as </span>i64);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="primary" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (40336865f 2022-08-15)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="primary" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c2804e6ec 2022-09-07)" ></div></body></html>

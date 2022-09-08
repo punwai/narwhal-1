@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `consensus/src/tusk.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tusk.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../consensus/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../consensus/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../consensus/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `consensus/src/tusk.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tusk.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../consensus/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../consensus/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../consensus/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -270,14 +270,14 @@
     utils, ConsensusOutput, SequenceNumber,
 };
 <span class="kw">use </span>config::{Committee, Stake};
-<span class="kw">use </span>crypto::{traits::EncodeDecodeBase64, Hash};
+<span class="kw">use </span>fastcrypto::{traits::EncodeDecodeBase64, Hash};
 <span class="kw">use </span>std::{collections::HashMap, sync::Arc};
 <span class="kw">use </span>tracing::debug;
 <span class="kw">use </span>types::{Certificate, CertificateDigest, ConsensusStore, Round, StoreResult};
 
-<span class="attribute">#[cfg(any(test))]</span>
-<span class="attribute">#[path = <span class="string">&quot;tests/tusk_tests.rs&quot;</span>]</span>
-<span class="kw">pub mod </span>tusk_tests;
+<span class="attribute">#[cfg(any(test))]
+#[path = <span class="string">&quot;tests/tusk_tests.rs&quot;</span>]
+</span><span class="kw">pub mod </span>tusk_tests;
 
 <span class="kw">pub struct </span>Tusk {
     <span class="doccomment">/// The committee information.
@@ -413,50 +413,53 @@
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>(CertificateDigest, Certificate)&gt; {
         <span class="comment">// TODO: We should elect the leader of round r-2 using the common coin revealed at round r.
         // At this stage, we are guaranteed to have 2f+1 certificates from round r (which is enough to
-        // compute the coin). We currently just use round-robin.
-        </span><span class="attribute">#[cfg(test)]</span>
-        <span class="kw">let </span>coin = <span class="number">0</span>;
-        <span class="attribute">#[cfg(not(test))]</span>
-        <span class="kw">let </span>coin = round <span class="kw">as </span>usize;
-
-        <span class="comment">// Elect the leader.
-        </span><span class="kw">let </span>leader = committee.leader(coin);
+        // compute the coin). We currently just use a stake-weighted choise seeded by the round.
+        //
+        // Note: this function is often called with even rounds only. While we do not aim at random selection
+        // yet (see issue #10), repeated calls to this function should still pick from the whole roster of leaders.
+        </span><span class="macro">cfg_if::cfg_if! </span>{
+            <span class="kw">if </span><span class="attribute">#[cfg(test)] </span>{
+                <span class="comment">// consensus tests rely on returning the same leader.
+                </span><span class="kw">let </span>leader = committee.authorities.iter().next().expect(<span class="string">&quot;Empty authorities table!&quot;</span>).<span class="number">0</span>;
+            } <span class="kw">else </span>{
+                <span class="comment">// Elect the leader in a stake-weighted choice seeded by the round
+                </span><span class="kw">let </span>leader = <span class="kw-2">&amp;</span>committee.leader(round);
+            }
+        }
 
         <span class="comment">// Return its certificate and the certificate&#39;s digest.
-        </span>dag.get(<span class="kw-2">&amp;</span>round).and_then(|x| x.get(<span class="kw-2">&amp;</span>leader))
+        </span>dag.get(<span class="kw-2">&amp;</span>round).and_then(|x| x.get(leader))
     }
 }
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="kw">mod </span>tests {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::metrics::ConsensusMetrics;
     <span class="kw">use </span>arc_swap::ArcSwap;
-    <span class="kw">use </span>crypto::traits::KeyPair;
     <span class="kw">use </span>prometheus::Registry;
     <span class="kw">use </span>rand::Rng;
     <span class="kw">use </span>std::collections::BTreeSet;
-    <span class="kw">use </span>test_utils::{make_consensus_store, mock_committee};
+    <span class="kw">use </span>test_utils::make_consensus_store;
+    <span class="kw">use </span>test_utils::CommitteeFixture;
     <span class="kw">use </span>types::Certificate;
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>state_limits_test() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>state_limits_test() {
         <span class="kw">let </span>gc_depth = <span class="number">12</span>;
         <span class="kw">let </span>rounds: Round = rand::thread_rng().gen_range(<span class="number">10</span>..<span class="number">100</span>);
 
         <span class="comment">// process certificates for rounds, check we don&#39;t grow the dag too much
-        </span><span class="kw">let </span>keys: Vec&lt;<span class="kw">_</span>&gt; = test_utils::keys(<span class="prelude-val">None</span>)
-            .into_iter()
-            .map(|kp| kp.public().clone())
-            .collect();
+        </span><span class="kw">let </span>fixture = CommitteeFixture::builder().build();
+        <span class="kw">let </span>committee = fixture.committee();
+        <span class="kw">let </span>keys: Vec&lt;<span class="kw">_</span>&gt; = fixture.authorities().map(|a| a.public_key()).collect();
 
-        <span class="kw">let </span>genesis = Certificate::genesis(<span class="kw-2">&amp;</span>mock_committee(<span class="kw-2">&amp;</span>keys[..]))
+        <span class="kw">let </span>genesis = Certificate::genesis(<span class="kw-2">&amp;</span>committee)
             .iter()
             .map(|x| x.digest())
             .collect::&lt;BTreeSet&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>(certificates, _next_parents) =
-            test_utils::make_optimal_certificates(<span class="number">1</span>..=rounds, <span class="kw-2">&amp;</span>genesis, <span class="kw-2">&amp;</span>keys);
-        <span class="kw">let </span>committee = mock_committee(<span class="kw-2">&amp;</span>keys);
+            test_utils::make_optimal_certificates(<span class="kw-2">&amp;</span>committee, <span class="number">1</span>..=rounds, <span class="kw-2">&amp;</span>genesis, <span class="kw-2">&amp;</span>keys);
 
         <span class="kw">let </span>store_path = test_utils::temp_dir();
         <span class="kw">let </span>store = make_consensus_store(<span class="kw-2">&amp;</span>store_path);
@@ -464,8 +467,7 @@
         <span class="kw">let </span>metrics = Arc::new(ConsensusMetrics::new(<span class="kw-2">&amp;</span>Registry::new()));
 
         <span class="kw">let </span>consensus_index = <span class="number">0</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>state =
-            ConsensusState::new(Certificate::genesis(<span class="kw-2">&amp;</span>mock_committee(<span class="kw-2">&amp;</span>keys[..])), metrics);
+        <span class="kw">let </span><span class="kw-2">mut </span>state = ConsensusState::new(Certificate::genesis(<span class="kw-2">&amp;</span>committee), metrics);
         <span class="kw">let </span><span class="kw-2">mut </span>tusk = Tusk::new(committee, store, gc_depth);
         <span class="kw">for </span>certificate <span class="kw">in </span>certificates {
             tusk.process_certificate(<span class="kw-2">&amp;mut </span>state, consensus_index, certificate)
@@ -486,35 +488,33 @@
         <span class="macro">assert!</span>(n &lt;= <span class="number">6</span>, <span class="string">&quot;DAG size: {}&quot;</span>, n);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>imperfect_state_limits_test() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>imperfect_state_limits_test() {
         <span class="kw">let </span>gc_depth = <span class="number">12</span>;
         <span class="kw">let </span>rounds: Round = rand::thread_rng().gen_range(<span class="number">10</span>..<span class="number">100</span>);
 
         <span class="comment">// process certificates for rounds, check we don&#39;t grow the dag too much
-        </span><span class="kw">let </span>keys: Vec&lt;<span class="kw">_</span>&gt; = test_utils::keys(<span class="prelude-val">None</span>)
-            .into_iter()
-            .map(|kp| kp.public().clone())
-            .collect();
+        </span><span class="kw">let </span>fixture = CommitteeFixture::builder().build();
+        <span class="kw">let </span>committee = fixture.committee();
+        <span class="kw">let </span>keys: Vec&lt;<span class="kw">_</span>&gt; = fixture.authorities().map(|a| a.public_key()).collect();
 
-        <span class="kw">let </span>genesis = Certificate::genesis(<span class="kw-2">&amp;</span>mock_committee(<span class="kw-2">&amp;</span>keys[..]))
+        <span class="kw">let </span>genesis = Certificate::genesis(<span class="kw-2">&amp;</span>committee)
             .iter()
             .map(|x| x.digest())
             .collect::&lt;BTreeSet&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="comment">// TODO: evidence that this test fails when `failure_probability` parameter &gt;= 1/3
         </span><span class="kw">let </span>(certificates, _next_parents) =
-            test_utils::make_certificates(<span class="number">1</span>..=rounds, <span class="kw-2">&amp;</span>genesis, <span class="kw-2">&amp;</span>keys, <span class="number">0.333</span>);
-        <span class="kw">let </span>committee = Arc::new(ArcSwap::from_pointee(mock_committee(<span class="kw-2">&amp;</span>keys)));
+            test_utils::make_certificates(<span class="kw-2">&amp;</span>committee, <span class="number">1</span>..=rounds, <span class="kw-2">&amp;</span>genesis, <span class="kw-2">&amp;</span>keys, <span class="number">0.333</span>);
+        <span class="kw">let </span>arc_committee = Arc::new(ArcSwap::from_pointee(committee.clone()));
 
         <span class="kw">let </span>store_path = test_utils::temp_dir();
         <span class="kw">let </span>store = make_consensus_store(<span class="kw-2">&amp;</span>store_path);
 
         <span class="kw">let </span>metrics = Arc::new(ConsensusMetrics::new(<span class="kw-2">&amp;</span>Registry::new()));
 
-        <span class="kw">let </span><span class="kw-2">mut </span>state =
-            ConsensusState::new(Certificate::genesis(<span class="kw-2">&amp;</span>mock_committee(<span class="kw-2">&amp;</span>keys[..])), metrics);
+        <span class="kw">let </span><span class="kw-2">mut </span>state = ConsensusState::new(Certificate::genesis(<span class="kw-2">&amp;</span>committee), metrics);
         <span class="kw">let </span>consensus_index = <span class="number">0</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>tusk = Tusk::new((<span class="kw-2">**</span>committee.load()).clone(), store, gc_depth);
+        <span class="kw">let </span><span class="kw-2">mut </span>tusk = Tusk::new((<span class="kw-2">**</span>arc_committee.load()).clone(), store, gc_depth);
 
         <span class="kw">for </span>certificate <span class="kw">in </span>certificates {
             tusk.process_certificate(<span class="kw-2">&amp;mut </span>state, consensus_index, certificate)
@@ -527,4 +527,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="consensus" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (40336865f 2022-08-15)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="consensus" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c2804e6ec 2022-09-07)" ></div></body></html>
