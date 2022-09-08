@@ -3,7 +3,7 @@
 use crate::{temp_dir, CommitteeFixture};
 use arc_swap::ArcSwap;
 use config::{Parameters, SharedCommittee, SharedWorkerCache, WorkerId};
-use crypto::{KeyPair, PublicKey};
+use crypto::{KeyPair, NetworkKeyPair, PublicKey};
 use executor::{SerializedTransaction, SubscriberResult};
 use fastcrypto::traits::KeyPair as _;
 use itertools::Itertools;
@@ -64,6 +64,7 @@ impl Cluster {
             let authority = AuthorityDetails::new(
                 id,
                 authority_fixture.keypair().copy(),
+                authority_fixture.network_keypair().copy(),
                 authority_fixture.worker_keypairs(),
                 params.clone(),
                 shared_committee.clone(),
@@ -269,6 +270,7 @@ impl Cluster {
 pub struct PrimaryNodeDetails {
     pub id: usize,
     pub key_pair: Arc<KeyPair>,
+    pub network_key_pair: Arc<NetworkKeyPair>,
     pub tx_transaction_confirmation: Sender<(SubscriberResult<Vec<u8>>, SerializedTransaction)>,
     registry: Registry,
     store_path: PathBuf,
@@ -283,6 +285,7 @@ impl PrimaryNodeDetails {
     fn new(
         id: usize,
         key_pair: KeyPair,
+        network_key_pair: NetworkKeyPair,
         parameters: Parameters,
         committee: SharedCommittee,
         worker_cache: SharedWorkerCache,
@@ -294,6 +297,7 @@ impl PrimaryNodeDetails {
         Self {
             id,
             key_pair: Arc::new(key_pair),
+            network_key_pair: Arc::new(network_key_pair),
             registry: Registry::new(),
             store_path: temp_dir(),
             tx_transaction_confirmation: tx,
@@ -342,6 +346,7 @@ impl PrimaryNodeDetails {
         let primary_store: NodeStorage = NodeStorage::reopen(store_path.clone());
         let mut primary_handlers = Node::spawn_primary(
             self.key_pair.copy(),
+            self.network_key_pair.copy(),
             self.committee.clone(),
             self.worker_cache.clone(),
             &primary_store,
@@ -504,6 +509,7 @@ impl AuthorityDetails {
     pub fn new(
         id: usize,
         key_pair: KeyPair,
+        network_key_pair: NetworkKeyPair,
         worker_keypairs: Vec<KeyPair>,
         parameters: Parameters,
         committee: SharedCommittee,
@@ -515,6 +521,7 @@ impl AuthorityDetails {
         let primary = PrimaryNodeDetails::new(
             id,
             key_pair,
+            network_key_pair,
             parameters.clone(),
             committee.clone(),
             worker_cache.clone(),

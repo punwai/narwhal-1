@@ -8,7 +8,7 @@ use consensus::{
     Consensus, ConsensusOutput,
 };
 
-use crypto::{KeyPair, PublicKey};
+use crypto::{KeyPair, NetworkKeyPair, PublicKey};
 use executor::{
     get_restored_consensus_output, ExecutionState, Executor, ExecutorOutput, SerializedTransaction,
     SubscriberResult,
@@ -127,6 +127,8 @@ impl Node {
     pub async fn spawn_primary<State>(
         // The private-public key pair of this authority.
         keypair: KeyPair,
+        // The private-public network key pair of this authority.
+        network_keypair: NetworkKeyPair,
         // The committee information.
         committee: SharedCommittee,
         // The worker information cache.
@@ -231,6 +233,7 @@ impl Node {
         let primary_handles = Primary::spawn(
             name.clone(),
             keypair,
+            network_keypair,
             committee.clone(),
             worker_cache.clone(),
             parameters.clone(),
