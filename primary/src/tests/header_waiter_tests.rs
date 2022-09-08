@@ -11,7 +11,9 @@ use fastcrypto::{traits::KeyPair, Hash};
 use network::{PrimaryNetwork, PrimaryToWorkerNetwork};
 use prometheus::Registry;
 use std::{sync::Arc, time::Duration};
-use test_utils::{fixture_header_with_payload, keys, resolve_name_committee_and_worker_cache};
+use test_utils::{
+    fixture_header_with_payload, keys, mock_network_key, resolve_name_committee_and_worker_cache,
+};
 use tokio::{sync::watch, time::timeout};
 use types::{BatchDigest, ReconfigureNotification, Round};
 
@@ -33,9 +35,10 @@ async fn successfully_synchronize_batches() {
             .unwrap();
     let kp = keys(None).remove(2);
 
+    let network_key = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_key.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 

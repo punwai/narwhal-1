@@ -18,8 +18,8 @@ use std::{
     time::Duration,
 };
 use test_utils::{
-    keys, make_optimal_certificates, make_optimal_signed_certificates, pure_committee_from_keys,
-    shared_worker_cache_from_keys, temp_dir,
+    keys, make_optimal_certificates, make_optimal_signed_certificates, mock_network_key,
+    pure_committee_from_keys, shared_worker_cache_from_keys, temp_dir,
 };
 use tokio::sync::watch;
 use tonic::transport::Channel;
@@ -96,7 +96,8 @@ async fn test_rounds_errors() {
 
     Primary::spawn(
         name.clone(),
-        keypair,
+        keypair.copy(),
+        mock_network_key(&keypair),
         Arc::new(ArcSwap::from_pointee(committee.clone())),
         worker_cache,
         parameters.clone(),
@@ -180,7 +181,8 @@ async fn test_rounds_return_successful_response() {
 
     Primary::spawn(
         name.clone(),
-        keypair,
+        keypair.copy(),
+        mock_network_key(&keypair),
         Arc::new(ArcSwap::from_pointee(committee.clone())),
         worker_cache,
         parameters.clone(),
@@ -320,7 +322,8 @@ async fn test_node_read_causal_signed_certificates() {
     // Spawn Primary 1 that we will be interacting with.
     Primary::spawn(
         name_1.clone(),
-        keypair_1,
+        keypair_1.copy(),
+        mock_network_key(&keypair_1),
         Arc::new(ArcSwap::from_pointee(committee.clone())),
         worker_cache.clone(),
         primary_1_parameters.clone(),
@@ -359,7 +362,8 @@ async fn test_node_read_causal_signed_certificates() {
     // Spawn Primary 2
     Primary::spawn(
         name_2.clone(),
-        keypair_2,
+        keypair_2.copy(),
+        mock_network_key(&keypair_2),
         Arc::new(ArcSwap::from_pointee(committee.clone())),
         worker_cache.clone(),
         primary_2_parameters.clone(),

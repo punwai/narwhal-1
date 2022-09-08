@@ -14,7 +14,7 @@ use config::{Committee, Import, Parameters, WorkerCache, WorkerId};
 use crypto::KeyPair;
 use executor::{SerializedTransaction, SubscriberResult};
 use eyre::Context;
-use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
+use fastcrypto::{ed25519::Ed25519KeyPair, generate_production_keypair, traits::KeyPair as _};
 use futures::future::join_all;
 use node::{
     execution_state::SimpleExecutionState,
@@ -90,11 +90,20 @@ async fn main() -> Result<(), eyre::Report> {
             let _guard = setup_telemetry(tracing_level, network_tracing_level, None);
             let kp = generate_production_keypair::<KeyPair>();
             config::Export::export(&kp, sub_matches.value_of("filename").unwrap())
-                .context("Failed to generate key pair")?
+                .context("Failed to generate key pair")?;
+            let network_kp = generate_production_keypair::<Ed25519KeyPair>();
+            config::Export::export(
+                &network_kp,
+                sub_matches.value_of("network_filename").unwrap(),
+            )
+            .context("Failed to generate network key pair")?
         }
         ("run", Some(sub_matches)) => {
             let key_file = sub_matches.value_of("keys").unwrap();
+            let network_key_file = sub_matches.value_of("network_keys").unwrap();
             let keypair = KeyPair::import(key_file).context("Failed to load the node's keypair")?;
+            let network_keypair = Ed25519KeyPair::import(network_key_file)
+                .context("Failed to load the node's keypair")?;
             let registry = match sub_matches.subcommand() {
                 ("primary", _) => primary_metrics_registry(keypair.public().clone()),
                 ("worker", Some(worker_matches)) => {
@@ -118,7 +127,7 @@ async fn main() -> Result<(), eyre::Report> {
                     let _guard = setup_telemetry(tracing_level, network_tracing_level, Some(&registry));
                 }
             }
-            run(sub_matches, keypair, registry).await?
+            run(sub_matches, keypair, network_keypair, registry).await?
         }
         _ => unreachable!(),
     }
@@ -176,6 +185,7 @@ fn setup_benchmark_telemetry(
 async fn run(
     matches: &ArgMatches<'_>,
     keypair: KeyPair,
+    network_keypair: Ed25519KeyPair,
     registry: Registry,
 ) -> Result<(), eyre::Report> {
     let committee_file = matches.value_of("committee").unwrap();
@@ -212,6 +222,7 @@ async fn run(
         ("primary", Some(sub_matches)) => {
             Node::spawn_primary(
                 keypair,
+                network_keypair,
                 committee,
                 worker_cache,
                 &store,

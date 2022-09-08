@@ -15,9 +15,9 @@ use std::{
 use storage::CertificateStore;
 use store::{reopen, rocks, rocks::DBMap, Store};
 use test_utils::{
-    certificate, fixture_batch_with_transactions, fixture_header_builder, keys,
-    resolve_name_committee_and_worker_cache, temp_dir, PrimaryToPrimaryMockServer, CERTIFICATES_CF,
-    CERTIFICATE_ID_BY_ROUND_CF, PAYLOAD_CF,
+    certificate, fixture_batch_with_transactions, fixture_header_builder, keys, mock_network_key,
+    mock_network_pk, resolve_name_committee_and_worker_cache, temp_dir, PrimaryToPrimaryMockServer,
+    CERTIFICATES_CF, CERTIFICATE_ID_BY_ROUND_CF, PAYLOAD_CF,
 };
 use tokio::{sync::watch, time::timeout};
 use types::{BatchDigest, Certificate, CertificateDigest, ReconfigureNotification, Round};
@@ -39,9 +39,10 @@ async fn test_process_certificates_stream_mode() {
     let own_address =
         network::multiaddr_to_address(&committee.primary(&name).unwrap().primary_to_primary)
             .unwrap();
+    let author_network_key = mock_network_key(&author_key);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(author_key.copy().private().0.to_bytes())
+        .private_key(author_network_key.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
@@ -50,8 +51,9 @@ async fn test_process_certificates_stream_mode() {
         .unwrap()
         .primary_to_primary;
     let address = network::multiaddr_to_address(&address).unwrap();
+    let requestor_network_key = mock_network_pk(&requestor_name);
     let peer_info = PeerInfo {
-        peer_id: PeerId(requestor_name.0.to_bytes()),
+        peer_id: PeerId(requestor_network_key.public().0.to_bytes()),
         affinity: anemo::types::PeerAffinity::High,
         address: vec![address],
     };
@@ -91,7 +93,8 @@ async fn test_process_certificates_stream_mode() {
         .unwrap()
         .primary_to_primary;
     let requestor_key = primary_keys.pop().unwrap();
-    let (mut handler, _network) = PrimaryToPrimaryMockServer::spawn(requestor_key, address);
+    let network_key = mock_network_key(&requestor_key);
+    let (mut handler, _network) = PrimaryToPrimaryMockServer::spawn(network_key, address);
 
     // Wait for connectivity
     let (mut events, mut peers) = network.subscribe();
@@ -153,9 +156,10 @@ async fn test_process_certificates_batch_mode() {
     let own_address =
         network::multiaddr_to_address(&committee.primary(&name).unwrap().primary_to_primary)
             .unwrap();
+    let network_kp = mock_network_key(&author_key);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(author_key.copy().private().0.to_bytes())
+        .private_key(network_kp.copy().private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
@@ -165,7 +169,7 @@ async fn test_process_certificates_batch_mode() {
         .primary_to_primary;
     let address = network::multiaddr_to_address(&address).unwrap();
     let peer_info = PeerInfo {
-        peer_id: PeerId(requestor_name.0.to_bytes()),
+        peer_id: PeerId(mock_network_pk(&requestor_name).public().0.to_bytes()),
         affinity: anemo::types::PeerAffinity::High,
         address: vec![address],
     };
@@ -214,7 +218,8 @@ async fn test_process_certificates_batch_mode() {
         .unwrap()
         .primary_to_primary;
     let requestor_key = primary_keys.pop().unwrap();
-    let (mut handler, _network) = PrimaryToPrimaryMockServer::spawn(requestor_key, address);
+    let (mut handler, _network) =
+        PrimaryToPrimaryMockServer::spawn(mock_network_key(&requestor_key), address);
 
     // Wait for connectivity
     let (mut events, mut peers) = network.subscribe();
@@ -290,7 +295,7 @@ async fn test_process_payload_availability_success() {
             .unwrap();
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(author_key.copy().private().0.to_bytes())
+        .private_key(mock_network_key(&author_key).private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
@@ -300,7 +305,7 @@ async fn test_process_payload_availability_success() {
         .primary_to_primary;
     let address = network::multiaddr_to_address(&address).unwrap();
     let peer_info = PeerInfo {
-        peer_id: PeerId(requestor_name.0.to_bytes()),
+        peer_id: PeerId(mock_network_pk(&requestor_name).public().0.to_bytes()),
         affinity: anemo::types::PeerAffinity::High,
         address: vec![address],
     };
@@ -353,7 +358,8 @@ async fn test_process_payload_availability_success() {
         .unwrap()
         .primary_to_primary;
     let requestor_key = primary_keys.pop().unwrap();
-    let (mut handler, _network) = PrimaryToPrimaryMockServer::spawn(requestor_key, address);
+    let (mut handler, _network) =
+        PrimaryToPrimaryMockServer::spawn(mock_network_key(&requestor_key), address);
 
     // Wait for connectivity
     let (mut events, mut peers) = network.subscribe();
@@ -448,7 +454,7 @@ async fn test_process_payload_availability_when_failures() {
             .unwrap();
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(author_key.copy().private().0.to_bytes())
+        .private_key(mock_network_key(&author_key).private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
@@ -457,8 +463,9 @@ async fn test_process_payload_availability_when_failures() {
         .unwrap()
         .primary_to_primary;
     let address = network::multiaddr_to_address(&address).unwrap();
+    let network_key = mock_network_pk(&requestor_name);
     let peer_info = PeerInfo {
-        peer_id: PeerId(requestor_name.0.to_bytes()),
+        peer_id: PeerId(network_key.public().0.to_bytes()),
         affinity: anemo::types::PeerAffinity::High,
         address: vec![address],
     };
@@ -517,7 +524,8 @@ async fn test_process_payload_availability_when_failures() {
         .unwrap()
         .primary_to_primary;
     let requestor_key = primary_keys.pop().unwrap();
-    let (mut handler, _network) = PrimaryToPrimaryMockServer::spawn(requestor_key, address);
+    let (mut handler, _network) =
+        PrimaryToPrimaryMockServer::spawn(mock_network_key(&requestor_key), address);
 
     // Wait for connectivity
     let (mut events, mut peers) = network.subscribe();

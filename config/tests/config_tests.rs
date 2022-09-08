@@ -221,7 +221,7 @@ fn commmittee_snapshot_matches() {
                 };
                 (
                     kp.public().clone(),
-                    make_authority_with_port_getter(increment_port_getter),
+                    make_authority_with_port_getter(increment_port_getter, kp.public()),
                 )
             })
             .collect(),

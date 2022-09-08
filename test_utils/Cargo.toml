@@ -26,6 +26,7 @@ tokio = { version = "1.20.1", features = ["sync", "rt", "macros"] }
 tokio-util = { version = "0.7.3", features = ["codec"] }
 tonic = "0.7.2"
 tracing = "0.1.36"
+sha3 = "0.10.4"
 
 config = { path = "../config" }
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "f40b3022369e3f81d67d1241796568ec6e980b23", features = ["copy_key"] }

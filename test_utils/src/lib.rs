@@ -2,12 +2,14 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 use anemo::Network;
+use blake2::{digest::Update, VarBlake2b};
 use config::{
     utils::get_available_port, Authority, Committee, Epoch, PrimaryAddresses, SharedWorkerCache,
     WorkerCache, WorkerId, WorkerIndex, WorkerInfo,
 };
 use crypto::{KeyPair, PublicKey, Signature};
 use fastcrypto::{
+    ed25519::Ed25519KeyPair,
     traits::{KeyPair as _, Signer as _},
     Digest, Hash as _,
 };
@@ -15,6 +17,7 @@ use futures::Stream;
 use indexmap::IndexMap;
 use multiaddr::Multiaddr;
 use rand::{rngs::StdRng, Rng, SeedableRng as _};
+use sha3::Sha3_256;
 use std::{
     collections::{BTreeSet, VecDeque},
     ops::RangeInclusive,
@@ -124,6 +127,13 @@ pub fn keys_with_len(rng_seed: impl Into<Option<u64>>, num_keys: usize) -> Vec<K
     (0..num_keys).map(|_| KeyPair::generate(&mut rng)).collect()
 }
 
+pub fn combined_keys(rng_seed: impl Into<Option<u64>>) -> Vec<(KeyPair, Ed25519KeyPair)> {
+    keys(rng_seed)
+        .into_iter()
+        .map(|k| (k.copy(), mock_network_key(&k)))
+        .collect()
+}
+
 pub fn keys(rng_seed: impl Into<Option<u64>>) -> Vec<KeyPair> {
     keys_with_len(rng_seed, 4)
 }
@@ -138,7 +148,7 @@ pub fn pure_committee_from_keys(keys: &[KeyPair]) -> Committee {
         epoch: Epoch::default(),
         authorities: keys
             .iter()
-            .map(|kp| (kp.public().clone(), make_authority()))
+            .map(|kp| (kp.public().clone(), make_authority(kp.public())))
             .collect(),
     }
 }
@@ -148,12 +158,20 @@ pub fn pure_committee_from_keys_with_mock_ports(keys: &[KeyPair]) -> Committee {
         epoch: Epoch::default(),
         authorities: keys
             .iter()
-            .map(|kp| (kp.public().clone(), make_authority_with_port_getter(|| 0)))
+            .map(|kp| {
+                (
+                    kp.public().clone(),
+                    make_authority_with_port_getter(|| 0, kp.public()),
+                )
+            })
             .collect(),
     }
 }
 
-pub fn make_authority_with_port_getter<F: FnMut() -> u16>(mut get_port: F) -> Authority {
+pub fn make_authority_with_port_getter<F: FnMut() -> u16>(
+    mut get_port: F,
+    key: &PublicKey,
+) -> Authority {
     let primary = PrimaryAddresses {
         primary_to_primary: format!("/ip4/127.0.0.1/tcp/{}/http", get_port())
             .parse()
@@ -163,11 +181,17 @@ pub fn make_authority_with_port_getter<F: FnMut() -> u16>(mut get_port: F) -> Au
             .unwrap(),
     };
 
-    Authority { stake: 1, primary }
+    let network_key = mock_network_pk(key);
+
+    Authority {
+        stake: 1,
+        primary,
+        network_key: network_key.public().clone(),
+    }
 }
 
-pub fn make_authority() -> Authority {
-    make_authority_with_port_getter(get_available_port)
+pub fn make_authority(network_key: &PublicKey) -> Authority {
+    make_authority_with_port_getter(get_available_port, network_key)
 }
 
 // Fixture
@@ -263,6 +287,19 @@ pub fn initialize_worker_index_with_port_getter<F: FnMut() -> u16>(mut get_port:
 /// Headers, Votes, Certificates
 ////////////////////////////////////////////////////////////////
 
+// Derive the KeyPair from the authority Public Key
+pub fn mock_network_pk(key: &PublicKey) -> Ed25519KeyPair {
+    let hasher_update = |hasher: &mut VarBlake2b| {
+        hasher.update(key.as_ref());
+    };
+    let ikm = fastcrypto::blake2b_256(hasher_update);
+    fastcrypto::hkdf::hkdf_generate_from_ikm::<Sha3_256, _>(&ikm, &[], None).unwrap()
+}
+
+pub fn mock_network_key(key: &KeyPair) -> Ed25519KeyPair {
+    mock_network_pk(key.public())
+}
+
 // Fixture
 pub fn mock_committee(keys: &[PublicKey]) -> Committee {
     Committee {
@@ -278,6 +315,7 @@ pub fn mock_committee(keys: &[PublicKey]) -> Committee {
                             primary_to_primary: "/ip4/0.0.0.0/tcp/0/http".parse().unwrap(),
                             worker_to_primary: "/ip4/0.0.0.0/tcp/0/http".parse().unwrap(),
                         },
+                        network_key: mock_network_pk(id).public().clone(),
                     },
                 )
             })
@@ -512,7 +550,10 @@ pub struct PrimaryToPrimaryMockServer {
 }
 
 impl PrimaryToPrimaryMockServer {
-    pub fn spawn(keypair: KeyPair, address: Multiaddr) -> (Receiver<PrimaryMessage>, Network) {
+    pub fn spawn(
+        network_keypair: Ed25519KeyPair,
+        address: Multiaddr,
+    ) -> (Receiver<PrimaryMessage>, Network) {
         let addr = network::multiaddr_to_address(&address).unwrap();
         let (sender, reciever) = channel(1);
         let service = PrimaryToPrimaryServer::new(Self { sender });
@@ -520,7 +561,7 @@ impl PrimaryToPrimaryMockServer {
         let routes = anemo::Router::new().add_rpc_service(service);
         let network = anemo::Network::bind(addr)
             .server_name("narwhal")
-            .private_key(keypair.private().0.to_bytes())
+            .private_key(network_keypair.private().0.to_bytes())
             .start(routes)
             .unwrap();
         info!("starting network on: {}", network.local_addr());

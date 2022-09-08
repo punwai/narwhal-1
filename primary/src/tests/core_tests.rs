@@ -7,8 +7,9 @@ use anemo::{types::PeerInfo, PeerId};
 use fastcrypto::traits::KeyPair;
 use prometheus::Registry;
 use test_utils::{
-    certificate, fixture_batch_with_transactions, header, headers, keys, pure_committee_from_keys,
-    shared_worker_cache_from_keys, votes, PrimaryToPrimaryMockServer,
+    certificate, fixture_batch_with_transactions, header, headers, keys, mock_network_key,
+    mock_network_pk, pure_committee_from_keys, shared_worker_cache_from_keys, votes,
+    PrimaryToPrimaryMockServer,
 };
 use types::{CertificateDigest, Header, Vote};
 
@@ -21,7 +22,7 @@ async fn process_header() {
     let worker_cache = shared_worker_cache_from_keys(&keys);
     let listener_key = keys.pop().unwrap(); // Skip the header' author.
     let kp = keys.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let mut signature_service = SignatureService::new(kp);
 
@@ -48,7 +49,8 @@ async fn process_header() {
         .primary(&header().author)
         .unwrap()
         .primary_to_primary;
-    let (mut handle, _network) = PrimaryToPrimaryMockServer::spawn(listener_key, address.clone());
+    let (mut handle, _network) =
+        PrimaryToPrimaryMockServer::spawn(mock_network_key(&listener_key), address.clone());
 
     // Make a synchronizer for the core.
     let synchronizer = Synchronizer::new(
@@ -73,8 +75,9 @@ async fn process_header() {
         .unwrap();
 
     let address = network::multiaddr_to_address(&address).unwrap();
+    let network_key = mock_network_pk(&header().author);
     let peer_info = PeerInfo {
-        peer_id: PeerId(header().author.0.to_bytes()),
+        peer_id: PeerId(network_key.public().0.to_bytes()),
         affinity: anemo::types::PeerAffinity::High,
         address: vec![address],
     };
@@ -133,7 +136,7 @@ async fn process_header_missing_parent() {
     let committee = pure_committee_from_keys(&k);
     let worker_cache = shared_worker_cache_from_keys(&k);
     let kp = k.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let signature_service = SignatureService::new(kp);
 
@@ -223,7 +226,7 @@ async fn process_header_missing_payload() {
     let committee = pure_committee_from_keys(&k);
     let worker_cache = shared_worker_cache_from_keys(&k);
     let kp = k.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let signature_service = SignatureService::new(kp);
 
@@ -323,7 +326,7 @@ async fn process_votes() {
     let committee = pure_committee_from_keys(&k);
     let worker_cache = shared_worker_cache_from_keys(&k);
     let kp = k.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let signature_service = SignatureService::new(kp);
 
@@ -363,8 +366,8 @@ async fn process_votes() {
         .start(anemo::Router::new())
         .unwrap();
 
-    for (pubkey, addresses) in committee.others_primaries(&name) {
-        let peer_id = PeerId(pubkey.0.to_bytes());
+    for (_pubkey, addresses, network_pubkey) in committee.others_primaries(&name) {
+        let peer_id = PeerId(network_pubkey.0.to_bytes());
         let address = network::multiaddr_to_address(&addresses.primary_to_primary).unwrap();
         let peer_info = PeerInfo {
             peer_id,
@@ -404,7 +407,7 @@ async fn process_votes() {
         .into_iter()
         .map(|kp| {
             let address = committee.primary(kp.public()).unwrap().primary_to_primary;
-            PrimaryToPrimaryMockServer::spawn(kp, address)
+            PrimaryToPrimaryMockServer::spawn(mock_network_key(&kp), address)
         })
         .collect();
 
@@ -442,7 +445,7 @@ async fn process_certificates() {
     let committee = pure_committee_from_keys(&k);
     let worker_cache = shared_worker_cache_from_keys(&k);
     let kp = k.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let signature_service = SignatureService::new(kp);
 
@@ -557,7 +560,7 @@ async fn shutdown_core() {
     let worker_cache = shared_worker_cache_from_keys(&keys);
     let _ = keys.pop().unwrap(); // Skip the header' author.
     let kp = keys.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let signature_service = SignatureService::new(kp);
 
@@ -631,7 +634,7 @@ async fn reconfigure_core() {
     let worker_cache = shared_worker_cache_from_keys(&keys_0);
     let listener_key = keys_0.pop().unwrap(); // Skip the header' author.
     let kp = keys_0.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let mut signature_service = SignatureService::new(kp);
 
@@ -665,7 +668,8 @@ async fn reconfigure_core() {
         .primary(&header.author)
         .unwrap()
         .primary_to_primary;
-    let (mut handle, _network) = PrimaryToPrimaryMockServer::spawn(listener_key, address.clone());
+    let (mut handle, _network) =
+        PrimaryToPrimaryMockServer::spawn(mock_network_key(&listener_key), address.clone());
 
     // Make a synchronizer for the core.
     let synchronizer = Synchronizer::new(
@@ -687,8 +691,9 @@ async fn reconfigure_core() {
         .start(anemo::Router::new())
         .unwrap();
     let address = network::multiaddr_to_address(&address).unwrap();
+    let network_key = mock_network_pk(&header.author);
     let peer_info = PeerInfo {
-        peer_id: PeerId(header.author.0.to_bytes()),
+        peer_id: PeerId(network_key.public().0.to_bytes()),
         affinity: anemo::types::PeerAffinity::High,
         address: vec![address],
     };

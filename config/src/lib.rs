@@ -11,7 +11,7 @@
 
 use arc_swap::ArcSwap;
 use crypto::PublicKey;
-use fastcrypto::traits::EncodeDecodeBase64;
+use fastcrypto::{ed25519::Ed25519PublicKey, traits::EncodeDecodeBase64};
 use multiaddr::Multiaddr;
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -448,6 +448,8 @@ pub struct Authority {
     pub stake: Stake,
     /// The network addresses of the primary.
     pub primary: PrimaryAddresses,
+    /// Network key of the primary.
+    pub network_key: Ed25519PublicKey,
 }
 
 pub type SharedCommittee = Arc<ArcSwap<Committee>>;
@@ -542,16 +544,31 @@ impl Committee {
             .ok_or_else(|| ConfigError::NotInCommittee((*to).encode_base64()))
     }
 
-    /// Returns the addresses of all primaries except `myself`.
-    pub fn others_primaries(&self, myself: &PublicKey) -> Vec<(PublicKey, PrimaryAddresses)> {
+    pub fn network_key(&self, pk: &PublicKey) -> Result<Ed25519PublicKey, ConfigError> {
         self.authorities
-            .iter()
-            .filter(|(name, _)| *name != myself)
-            .map(|(name, authority)| (name.clone(), authority.primary.clone()))
-            .collect()
+            .get(&pk.clone())
+            .map(|x| x.network_key.clone())
+            .ok_or_else(|| ConfigError::NotInCommittee((*pk).encode_base64()))
     }
 
     /// Return all the network addresses in the committee.
+    pub fn others_primaries(
+        &self,
+        myself: &PublicKey,
+    ) -> Vec<(PublicKey, PrimaryAddresses, Ed25519PublicKey)> {
+        self.authorities
+            .iter()
+            .filter(|(name, _)| *name != myself)
+            .map(|(name, authority)| {
+                (
+                    name.clone(),
+                    authority.primary.clone(),
+                    authority.network_key.clone(),
+                )
+            })
+            .collect()
+    }
+
     fn get_all_network_addresses(&self) -> HashSet<&Multiaddr> {
         self.authorities
             .values()

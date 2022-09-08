@@ -13,7 +13,10 @@ use executor::{
     get_restored_consensus_output, ExecutionState, Executor, ExecutorOutput, SerializedTransaction,
     SubscriberResult,
 };
-use fastcrypto::traits::{KeyPair as _, VerifyingKey};
+use fastcrypto::{
+    ed25519::Ed25519KeyPair,
+    traits::{KeyPair as _, VerifyingKey},
+};
 use itertools::Itertools;
 use primary::{BlockCommand, NetworkModel, PayloadToken, Primary, PrimaryChannelMetrics};
 use prometheus::{IntGauge, Registry};
@@ -127,6 +130,8 @@ impl Node {
     pub async fn spawn_primary<State>(
         // The private-public key pair of this authority.
         keypair: KeyPair,
+        // The private-public network key pair of this authority.
+        network_keypair: Ed25519KeyPair,
         // The committee information.
         committee: SharedCommittee,
         // The worker information cache.
@@ -231,6 +236,7 @@ impl Node {
         let primary_handles = Primary::spawn(
             name.clone(),
             keypair,
+            network_keypair,
             committee.clone(),
             worker_cache.clone(),
             parameters.clone(),

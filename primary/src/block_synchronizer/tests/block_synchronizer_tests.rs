@@ -19,7 +19,7 @@ use std::{
     time::Duration,
 };
 use test_utils::{
-    certificate, fixture_batch_with_transactions, fixture_header_builder, keys,
+    certificate, fixture_batch_with_transactions, fixture_header_builder, keys, mock_network_key,
     resolve_name_committee_and_worker_cache, PrimaryToPrimaryMockServer,
 };
 use tokio::{
@@ -79,14 +79,15 @@ async fn test_successful_headers_synchronization() {
             .unwrap();
     println!("New primary added: {:?}", own_address);
     let kp = primary_keys.remove(2);
+    let network_kp = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_kp.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
-    for (pubkey, addresses) in committee.others_primaries(&name) {
-        let peer_id = PeerId(pubkey.0.to_bytes());
+    for (_pubkey, addresses, network_pubkey) in committee.others_primaries(&name) {
+        let peer_id = PeerId(network_pubkey.0.to_bytes());
         let address = network::multiaddr_to_address(&addresses.primary_to_primary).unwrap();
         let peer_info = PeerInfo {
             peer_id,
@@ -273,14 +274,15 @@ async fn test_successful_payload_synchronization() {
             .unwrap();
     println!("New primary added: {:?}", own_address);
     let kp = primary_keys.remove(2);
+    let network_kp = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_kp.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
-    for (pubkey, addresses) in committee.others_primaries(&name) {
-        let peer_id = PeerId(pubkey.0.to_bytes());
+    for (_pubkey, addresses, network_pubkey) in committee.others_primaries(&name) {
+        let peer_id = PeerId(network_pubkey.0.to_bytes());
         let address = network::multiaddr_to_address(&addresses.primary_to_primary).unwrap();
         let peer_info = PeerInfo {
             peer_id,
@@ -499,9 +501,10 @@ async fn test_multiple_overlapping_requests() {
             .unwrap();
     println!("New primary added: {:?}", own_address);
     let kp = keys(None).remove(2);
+    let network_kp = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_kp.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
@@ -624,9 +627,10 @@ async fn test_timeout_while_waiting_for_certificates() {
             .unwrap();
     println!("New primary added: {:?}", own_address);
     let kp = keys(None).remove(2);
+    let network_kp = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_kp.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
@@ -713,9 +717,10 @@ async fn test_reply_with_certificates_already_in_storage() {
             .unwrap();
     let kp = keys(None).remove(2);
 
+    let network_kp = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_kp.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
 
@@ -816,9 +821,10 @@ async fn test_reply_with_payload_already_in_storage() {
             .unwrap();
     let kp = keys(None).remove(2);
 
+    let network_kp = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_kp.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
     let synchronizer = BlockSynchronizer {
@@ -926,9 +932,10 @@ async fn test_reply_with_payload_already_in_storage_for_own_certificates() {
             .unwrap();
     let kp = keys(None).remove(2);
 
+    let network_kp = mock_network_key(&kp);
     let network = anemo::Network::bind(own_address)
         .server_name("narwhal")
-        .private_key(kp.private().0.to_bytes())
+        .private_key(network_kp.private().0.to_bytes())
         .start(anemo::Router::new())
         .unwrap();
     let synchronizer = BlockSynchronizer {
@@ -1021,7 +1028,8 @@ fn primary_listener(
     address: multiaddr::Multiaddr,
 ) -> JoinHandle<Vec<PrimaryMessage>> {
     tokio::spawn(async move {
-        let (mut recv, _network) = PrimaryToPrimaryMockServer::spawn(keypair, address);
+        let (mut recv, _network) =
+            PrimaryToPrimaryMockServer::spawn(mock_network_key(&keypair), address);
         let mut responses = Vec::new();
 
         loop {

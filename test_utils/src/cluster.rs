@@ -1,11 +1,13 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-use crate::{keys, pure_committee_from_keys, shared_worker_cache_from_keys, temp_dir};
+use crate::{
+    combined_keys, keys, pure_committee_from_keys, shared_worker_cache_from_keys, temp_dir,
+};
 use arc_swap::ArcSwap;
 use config::{Committee, Parameters, SharedCommittee, SharedWorkerCache, WorkerId};
 use crypto::{KeyPair, PublicKey};
 use executor::{SerializedTransaction, SubscriberResult};
-use fastcrypto::traits::KeyPair as _;
+use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair as _};
 use itertools::Itertools;
 use multiaddr::Multiaddr;
 use node::{
@@ -63,15 +65,16 @@ impl Cluster {
 
         info!("###### Creating new cluster ######");
         info!("Validator keys:");
-        let k = keys(None);
+        let k = combined_keys(None);
         let mut nodes = HashMap::new();
 
-        for (id, key_pair) in k.into_iter().enumerate() {
+        for (id, (key_pair, network_key_pair)) in k.into_iter().enumerate() {
             info!("Key {id} -> {}", key_pair.public().clone());
 
             let authority = AuthorityDetails::new(
                 id,
                 key_pair,
+                network_key_pair,
                 params.clone(),
                 shared_committee.clone(),
                 shared_worker_cache.clone(),
@@ -275,6 +278,7 @@ impl Cluster {
 pub struct PrimaryNodeDetails {
     pub id: usize,
     pub key_pair: Arc<KeyPair>,
+    pub network_key_pair: Arc<Ed25519KeyPair>,
     pub tx_transaction_confirmation: Sender<(SubscriberResult<Vec<u8>>, SerializedTransaction)>,
     registry: Registry,
     store_path: PathBuf,
@@ -289,6 +293,7 @@ impl PrimaryNodeDetails {
     fn new(
         id: usize,
         key_pair: KeyPair,
+        network_key_pair: Ed25519KeyPair,
         parameters: Parameters,
         committee: SharedCommittee,
         worker_cache: SharedWorkerCache,
@@ -300,6 +305,7 @@ impl PrimaryNodeDetails {
         Self {
             id,
             key_pair: Arc::new(key_pair),
+            network_key_pair: Arc::new(network_key_pair),
             registry: Registry::new(),
             store_path: temp_dir(),
             tx_transaction_confirmation: tx,
@@ -348,6 +354,7 @@ impl PrimaryNodeDetails {
         let primary_store: NodeStorage = NodeStorage::reopen(store_path.clone());
         let mut primary_handlers = Node::spawn_primary(
             self.key_pair.copy(),
+            self.network_key_pair.copy(),
             self.committee.clone(),
             self.worker_cache.clone(),
             &primary_store,
@@ -509,6 +516,7 @@ impl AuthorityDetails {
     pub fn new(
         id: usize,
         key_pair: KeyPair,
+        network_key_pair: Ed25519KeyPair,
         parameters: Parameters,
         committee: SharedCommittee,
         worker_cache: SharedWorkerCache,
@@ -519,6 +527,7 @@ impl AuthorityDetails {
         let primary = PrimaryNodeDetails::new(
             id,
             key_pair,
+            network_key_pair,
             parameters.clone(),
             committee.clone(),
             worker_cache.clone(),

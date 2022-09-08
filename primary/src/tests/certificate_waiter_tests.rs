@@ -13,7 +13,7 @@ use network::{PrimaryNetwork, PrimaryToWorkerNetwork};
 use prometheus::Registry;
 use std::{collections::BTreeSet, sync::Arc, time::Duration};
 use test_utils::{
-    certificate, fixture_headers_round, keys, pure_committee_from_keys,
+    certificate, fixture_headers_round, keys, mock_network_key, pure_committee_from_keys,
     shared_worker_cache_from_keys,
 };
 use tokio::sync::watch;
@@ -25,7 +25,7 @@ async fn process_certificate_missing_parents_in_reverse() {
     let committee = pure_committee_from_keys(&k);
     let worker_cache = shared_worker_cache_from_keys(&k);
     let kp = k.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let signature_service = SignatureService::new(kp);
 
@@ -179,7 +179,7 @@ async fn process_certificate_check_gc_fires() {
     let committee = pure_committee_from_keys(&k);
     let worker_cache = shared_worker_cache_from_keys(&k);
     let kp = k.pop().unwrap();
-    let network_key = kp.copy().private().0.to_bytes();
+    let network_key = mock_network_key(&kp).private().0.to_bytes();
     let name = kp.public().clone();
     let signature_service = SignatureService::new(kp);
 

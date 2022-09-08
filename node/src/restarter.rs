@@ -5,7 +5,7 @@ use arc_swap::ArcSwap;
 use config::{Committee, Parameters, SharedWorkerCache};
 use crypto::KeyPair;
 use executor::{ExecutionState, ExecutorOutput};
-use fastcrypto::traits::KeyPair as _;
+use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair as _};
 use futures::future::join_all;
 use network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
 use prometheus::Registry;
@@ -20,12 +20,13 @@ pub struct NodeRestarter;
 impl NodeRestarter {
     pub async fn watch<State>(
         keypair: KeyPair,
+        network_keypair: Ed25519KeyPair,
         committee: &Committee,
         worker_cache: SharedWorkerCache,
         storage_base_path: PathBuf,
         execution_state: Arc<State>,
         parameters: Parameters,
-        mut rx_reconfigure: Receiver<(KeyPair, Committee)>,
+        mut rx_reconfigure: Receiver<(KeyPair, Committee, Ed25519KeyPair)>,
         tx_output: Sender<ExecutorOutput<State>>,
         registry: &Registry,
     ) where
@@ -34,6 +35,7 @@ impl NodeRestarter {
         State::Error: Debug,
     {
         let mut keypair = keypair;
+        let mut network_keypair = network_keypair;
         let mut name = keypair.public().clone();
         let mut committee = committee.clone();
 
@@ -53,6 +55,7 @@ impl NodeRestarter {
             // Restart the relevant components.
             let primary_handles = Node::spawn_primary(
                 keypair,
+                network_keypair,
                 Arc::new(ArcSwap::new(Arc::new(committee.clone()))),
                 worker_cache.clone(),
                 &store,
@@ -79,10 +82,11 @@ impl NodeRestarter {
             handles.extend(worker_handles);
 
             // Wait for a committee change.
-            let (new_keypair, new_committee) = match rx_reconfigure.recv().await {
-                Some(x) => x,
-                None => break,
-            };
+            let (new_keypair, new_committee, new_network_keypair) =
+                match rx_reconfigure.recv().await {
+                    Some(x) => x,
+                    None => break,
+                };
             tracing::info!("Starting reconfiguration with committee {committee}");
 
             // Shutdown all relevant components.
@@ -126,6 +130,7 @@ impl NodeRestarter {
 
             // Update the settings for the next epoch.
             keypair = new_keypair;
+            network_keypair = new_network_keypair;
             name = keypair.public().clone();
             committee = new_committee;
         }

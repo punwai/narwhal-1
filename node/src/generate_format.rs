@@ -11,6 +11,7 @@ use rand::{prelude::StdRng, SeedableRng};
 use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
 use std::{fs::File, io::Write};
 use structopt::{clap::arg_enum, StructOpt};
+use test_utils::mock_network_pk;
 use types::{
     Batch, BatchDigest, Certificate, CertificateDigest, Header, HeaderDigest,
     ReconfigureNotification, WorkerPrimaryError, WorkerPrimaryMessage,
@@ -51,7 +52,14 @@ fn get_registry() -> Result<Registry> {
                         .parse()
                         .unwrap(),
                 };
-                (id.clone(), Authority { stake: 1, primary })
+                (
+                    id.clone(),
+                    Authority {
+                        stake: 1,
+                        primary,
+                        network_key: mock_network_pk(id).public().clone(),
+                    },
+                )
             })
             .collect(),
     };

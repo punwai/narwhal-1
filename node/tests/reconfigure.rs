@@ -6,7 +6,7 @@ use config::{Committee, Parameters, SharedWorkerCache};
 use consensus::ConsensusOutput;
 use crypto::{KeyPair, PublicKey};
 use executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
-use fastcrypto::traits::KeyPair as _;
+use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair as _};
 use futures::future::join_all;
 use network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
 use node::{restarter::NodeRestarter, Node, NodeStorage};
@@ -16,7 +16,7 @@ use std::{
     fmt::Debug,
     sync::{Arc, Mutex},
 };
-use test_utils::{keys, resolve_name_committee_and_worker_cache};
+use test_utils::{combined_keys, keys, mock_network_key, resolve_name_committee_and_worker_cache};
 use tokio::{
     sync::mpsc::{channel, Receiver, Sender},
     time::{interval, sleep, Duration, MissedTickBehavior},
@@ -27,14 +27,14 @@ use types::{ReconfigureNotification, TransactionProto, TransactionsClient, Worke
 struct SimpleExecutionState {
     index: usize,
     committee: Arc<Mutex<Committee>>,
-    tx_reconfigure: Sender<(KeyPair, Committee)>,
+    tx_reconfigure: Sender<(KeyPair, Committee, Ed25519KeyPair)>,
 }
 
 impl SimpleExecutionState {
     pub fn new(
         index: usize,
         committee: Committee,
-        tx_reconfigure: Sender<(KeyPair, Committee)>,
+        tx_reconfigure: Sender<(KeyPair, Committee, Ed25519KeyPair)>,
     ) -> Self {
         Self {
             index,
@@ -66,7 +66,7 @@ impl ExecutionState for SimpleExecutionState {
                 guard.epoch = epoch;
             };
 
-            let keypair = keys(None)
+            let (keypair, network_keypair) = combined_keys(None)
                 .into_iter()
                 .enumerate()
                 .filter(|(i, _)| i == &self.index)
@@ -76,7 +76,7 @@ impl ExecutionState for SimpleExecutionState {
                 .unwrap();
             let new_committee = self.committee.lock().unwrap().clone();
             self.tx_reconfigure
-                .send((keypair, new_committee))
+                .send((keypair, new_committee, network_keypair))
                 .await
                 .unwrap();
         }
@@ -193,7 +193,8 @@ async fn restart() {
         let parameters = parameters.clone();
         tokio::spawn(async move {
             NodeRestarter::watch(
-                keypair,
+                keypair.copy(),
+                mock_network_key(&keypair),
                 &committee,
                 worker_cache,
                 /* base_store_path */ test_utils::temp_dir(),
@@ -283,7 +284,7 @@ async fn epoch_change() {
             let mut primary_network = WorkerToPrimaryNetwork::default();
             let mut worker_network = PrimaryToWorkerNetwork::default();
 
-            while let Some((_, committee)) = rx_node_reconfigure.recv().await {
+            while let Some((_, committee, _)) = rx_node_reconfigure.recv().await {
                 let address = committee
                     .primary(&name_clone)
                     .expect("Our key is not in the committee")
@@ -314,7 +315,8 @@ async fn epoch_change() {
         });
 
         let _primary_handles = Node::spawn_primary(
-            keypair,
+            keypair.copy(),
+            mock_network_key(&keypair),
             Arc::new(ArcSwap::new(Arc::new(committee.clone()))),
             worker_cache.clone(),
             &store,

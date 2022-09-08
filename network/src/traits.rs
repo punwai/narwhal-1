@@ -1,7 +1,7 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 use async_trait::async_trait;
-use crypto::PublicKey;
+use fastcrypto::ed25519::Ed25519PublicKey;
 use multiaddr::Multiaddr;
 use rand::prelude::{SliceRandom, SmallRng};
 use serde::Serialize;
@@ -108,13 +108,17 @@ pub trait ReliableNetwork: BaseNetwork {
 
 #[async_trait]
 pub trait UnreliableNetwork2<Message: Clone + Send + Sync> {
-    async fn unreliable_send(&mut self, peer: PublicKey, message: &Message) -> JoinHandle<()>;
+    async fn unreliable_send(
+        &mut self,
+        peer: Ed25519PublicKey,
+        message: &Message,
+    ) -> JoinHandle<()>;
 
     /// Broadcasts a message to all `peers` passed as an argument.
     /// The attempts to send individual messages are best effort and will not be retried.
     async fn unreliable_broadcast(
         &mut self,
-        peers: Vec<PublicKey>,
+        peers: Vec<Ed25519PublicKey>,
         message: &Message,
     ) -> Vec<JoinHandle<()>> {
         let mut handlers = Vec::new();
@@ -136,7 +140,7 @@ pub trait LuckyNetwork2<Message> {
     /// message only to them. This is useful to pick nodes with whom to sync.
     async fn lucky_broadcast(
         &mut self,
-        mut peers: Vec<PublicKey>,
+        mut peers: Vec<Ed25519PublicKey>,
         message: &Message,
         num_nodes: usize,
     ) -> Vec<JoinHandle<()>>;
@@ -151,7 +155,7 @@ where
 {
     async fn lucky_broadcast(
         &mut self,
-        mut peers: Vec<PublicKey>,
+        mut peers: Vec<Ed25519PublicKey>,
         message: &M,
         nodes: usize,
     ) -> Vec<JoinHandle<()>> {
@@ -165,13 +169,13 @@ where
 pub trait ReliableNetwork2<Message: Clone + Send + Sync> {
     async fn send(
         &mut self,
-        peer: PublicKey,
+        peer: Ed25519PublicKey,
         message: &Message,
     ) -> CancelOnDropHandler<anyhow::Result<anemo::Response<()>>>;
 
     async fn broadcast(
         &mut self,
-        peers: Vec<PublicKey>,
+        peers: Vec<Ed25519PublicKey>,
         message: &Message,
     ) -> Vec<CancelOnDropHandler<anyhow::Result<anemo::Response<()>>>> {
         let mut handlers = Vec::new();

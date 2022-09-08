@@ -10,7 +10,8 @@ use primary::{NetworkModel, Primary, CHANNEL_CAPACITY};
 use prometheus::Registry;
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use test_utils::{
-    keys, make_authority, pure_committee_from_keys, shared_worker_cache_from_keys, temp_dir,
+    keys, make_authority, mock_network_key, pure_committee_from_keys,
+    shared_worker_cache_from_keys, temp_dir,
 };
 use tokio::sync::watch;
 use types::{ReconfigureNotification, WorkerPrimaryMessage};
@@ -51,7 +52,8 @@ async fn test_simple_epoch_change() {
 
         Primary::spawn(
             name,
-            signer,
+            signer.copy(),
+            mock_network_key(&signer),
             Arc::new(ArcSwap::from_pointee(committee_0.clone())),
             worker_cache_0.clone(),
             parameters.clone(),
@@ -132,7 +134,10 @@ async fn test_partial_committee_change() {
 
     // Make the committee of epoch 0.
     let keys_0 = keys(None);
-    let authorities_0: Vec<_> = keys_0.iter().map(|_| make_authority()).collect();
+    let authorities_0: Vec<_> = keys_0
+        .iter()
+        .map(|key| make_authority(key.public()))
+        .collect();
     let committee_0 = Committee {
         epoch: Epoch::default(),
         authorities: keys_0
@@ -165,7 +170,8 @@ async fn test_partial_committee_change() {
 
         Primary::spawn(
             name,
-            signer,
+            signer.copy(),
+            mock_network_key(&signer),
             Arc::new(ArcSwap::from_pointee(committee_0.clone())),
             worker_cache_0.clone(),
             parameters.clone(),
@@ -213,7 +219,7 @@ async fn test_partial_committee_change() {
                 committee_keys.push(key_0);
                 (pk, authority)
             } else {
-                let new_authority = make_authority();
+                let new_authority = make_authority(key_1.public());
                 let pk = key_1.public().clone();
                 committee_keys.push(key_1.copy());
                 to_spawn.push(key_1);
@@ -253,7 +259,8 @@ async fn test_partial_committee_change() {
 
         Primary::spawn(
             name,
-            signer,
+            signer.copy(),
+            mock_network_key(&signer),
             Arc::new(ArcSwap::from_pointee(committee_1.clone())),
             worker_cache_1.clone(),
             parameters.clone(),
@@ -339,7 +346,8 @@ async fn test_restart_with_new_committee_change() {
 
         let primary_handles = Primary::spawn(
             name,
-            signer,
+            signer.copy(),
+            mock_network_key(&signer),
             Arc::new(ArcSwap::new(Arc::new(committee_0.clone()))),
             worker_cache_0.clone(),
             parameters.clone(),
@@ -422,7 +430,8 @@ async fn test_restart_with_new_committee_change() {
 
             let primary_handles = Primary::spawn(
                 name,
-                signer,
+                signer.copy(),
+                mock_network_key(&signer),
                 Arc::new(ArcSwap::new(Arc::new(new_committee.clone()))),
                 Arc::new(ArcSwap::new(Arc::new(new_worker_cache.clone()))),
                 parameters.clone(),
@@ -511,7 +520,8 @@ async fn test_simple_committee_update() {
 
         Primary::spawn(
             name,
-            signer,
+            signer.copy(),
+            mock_network_key(&signer),
             Arc::new(ArcSwap::from_pointee(committee_0.clone())),
             worker_cache_0.clone(),
             parameters.clone(),
